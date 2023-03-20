@@ -61,9 +61,16 @@ if which nvim >/dev/null 2>&1 ; then
     mkdir -p ~/.config
     link_file "$base_dir/nvim" ~/.config/nvim
 fi
+
 echo "Setting up vim..."
 if link_file "$base_dir/vim/vimrc" ~/.vimrc ; then
     vim +PlugInstall +qall
+fi
+
+echo "Setting up git..."
+if  which git >/dev/null 2>&1 ; then
+    link_file "$base_dir/git/gitconfig" ~/.gitconfig
+    link_file "$base_dir/git/gitignore_global" ~/.gitignore
 fi
 
 echo "Setting up tmux..."

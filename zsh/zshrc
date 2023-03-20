@@ -159,3 +159,25 @@ export XDG_CONFIG_HOME=~/.config
 # Make Ctrl-P/N search by begining like Up/Down arrow keys do.
 bindkey '^P' up-line-or-beginning-search
 bindkey '^N' down-line-or-beginning-search
+
+# brew
+export HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"
+export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
+export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git"
+export HOMEBREW_CORE_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git"
+
+# openjdk
+export PATH="/usr/local/opt/openjdk@11/bin:$PATH"
+export CPPFLAGS="-I/usr/local/opt/openjdk@11/include"
+
+# pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+# gnubin
+export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
+
+# golang
+export PATH="/usr/local/opt/go@1.19/bin:$PATH"
