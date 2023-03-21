@@ -18,6 +18,7 @@
     unstage = reset HEAD --
     ignore = update-index --assume-unchanged
     unignore = update-index --no-assume-unchanged
+    update = fetch --all
 [http]
     #proxy = http://std.dig.name:27833
     #proxy = http://127.0.0.1:8787
