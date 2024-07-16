@@ -18,7 +18,7 @@
     unstage = reset HEAD --
     ignore = update-index --assume-unchanged
     unignore = update-index --no-assume-unchanged
-    update = fetch --all
+    update = !git fetch --all && git rebase
 [http]
     #proxy = http://std.dig.name:27833
     #proxy = http://127.0.0.1:8787
@@ -29,10 +29,13 @@
 [credential]
     helper = store
 [filter "lfs"]
-    clean = git-lfs clean -- %f
-    smudge = git-lfs smudge -- %f
-    required = true
-    process = git-lfs filter-process
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	required = true
+	process = git-lfs filter-process
 [oh-my-zsh]
     hide-status = 1
     hide-dirty = 1
+[user]
+	name = tengwei.ctw
+	email = tengwei.ctw@antgroup.com
