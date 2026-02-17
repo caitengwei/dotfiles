@@ -69,9 +69,8 @@ if which nvim >/dev/null 2>&1 ; then
 fi
 
 echo "Setting up vim..."
-if link_file "$base_dir/vim/vimrc" ~/.vimrc ; then
-    vim +PlugInstall +qall
-fi
+link_file "$base_dir/vim/vimrc" ~/.vimrc
+vim +PlugInstall +qall
 
 echo "Setting up git..."
 if  which git >/dev/null 2>&1 ; then

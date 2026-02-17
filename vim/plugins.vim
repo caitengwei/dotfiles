@@ -52,5 +52,8 @@ if !has("nvim")
     endfor
     call plug#end()
 
-    colorscheme snazzy
+    try
+        colorscheme snazzy
+    catch
+    endtry
 endif
