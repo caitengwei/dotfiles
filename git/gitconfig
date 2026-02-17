@@ -19,6 +19,7 @@
     ignore = update-index --assume-unchanged
     unignore = update-index --no-assume-unchanged
     update = !git fetch --all && git rebase
+    pr = pull --rebase
 [http]
     #proxy = http://std.dig.name:27833
     #proxy = http://127.0.0.1:8787

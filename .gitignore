@@ -1,4 +1,5 @@
 *.local
+.DS_Store
 vim/temp_dirs
 nvim/temp_dirs
 vim/installed_plugins/**

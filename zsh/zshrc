@@ -6,7 +6,7 @@ export ZSH=$DOTFILES/zsh/oh-my-zsh
 # Look in ~/.oh-my-zsh/themes/
 # Optionally, if you set this to "random", it'll load a random theme each
 # time that oh-my-zsh is loaded.
-#ZSH_THEME="robbyrussell"
+ZSH_THEME="robbyrussell"
 ZSH_THEME="bira"
 
 # Uncomment the following line to use case-sensitive completion.
@@ -103,6 +103,9 @@ export LANG=en_US.UTF-8
 
 export EDITOR='vim'
 
+# Use emacs keybindings
+bindkey -e
+
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
@@ -156,7 +159,7 @@ fi
 
 export XDG_CONFIG_HOME=~/.config
 
-# Make Ctrl-P/N search by begining like Up/Down arrow keys do.
+# Make Ctrl -P/N search by begining like Up/Down arrow keys do.
 bindkey '^P' up-line-or-beginning-search
 bindkey '^N' down-line-or-beginning-search
 
@@ -186,7 +189,11 @@ export PATH="/usr/local/opt/go@1.19/bin:$PATH"
 # java
 export JAVA_HOME=$(/usr/libexec/java_home)
 
-# ssh prod loghost
-alias log2prod="ssh -o HostKeyAlgorithms=+ssh-rsa -o KexAlgorithms=diffie-hellman-group1-sha1 tengwei.ctw@login1.et2.alipay.net"
-alias g2i32="ssh tengwei.ctw@11.160.41.175"
-alias g2j38="ssh tengwei.ctw@11.239.85.179"
+# git-subrepo
+source /Users/twcai/workspace/github/git-subrepo/.rc
+fpath=('/Users/twcai/workspace/github/git-subrepo/share/zsh-completion' $fpath)
+
+source "$HOME/.ssctl/env"
+
+# Added by Antigravity
+export PATH="/Users/twcai/.antigravity/antigravity/bin:$PATH"
