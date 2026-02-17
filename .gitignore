@@ -6,3 +6,8 @@ nvim/spell
 hammerspoon/Spoons/EmmyLua.spoon/annotations
 zsh/my-theme.zsh-theme.antigen-compat
 tmux/plugins
+.DS_Store
+vim/temp_dirs
+nvim/temp_dirs
+vim/installed_plugins/**
+hammerspoon/local.lua

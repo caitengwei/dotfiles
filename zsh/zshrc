@@ -6,6 +6,12 @@
 [[ $IS_MACOS == true ]] && path_add_custom -f
 
 # === zsh settings ===
+# Set name of the theme to load.
+# Look in ~/.oh-my-zsh/themes/
+# Optionally, if you set this to "random", it'll load a random theme each
+# time that oh-my-zsh is loaded.
+# ZSH_THEME="robbyrussell"
+ZSH_THEME="bira"
 
 HISTSIZE=130000
 SAVEHIST=130000
@@ -203,6 +209,51 @@ if type fzf >/dev/null 2>&1 ; then
     zvm_after_init_commands+=(_zshrc_init_fzf)
 fi
 
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+
+# Preferred editor for local and remote sessions
+# if [[ -n $SSH_CONNECTION ]]; then
+#   export EDITOR='vim'
+# else
+#   export EDITOR='mvim'
+# fi
+
+export EDITOR='vim'
+
+# Use emacs keybindings
+bindkey -e
+
+# Compilation flags
+# export ARCHFLAGS="-arch x86_64"
+
+# ssh
+# export SSH_KEY_PATH="~/.ssh/dsa_id"
+
+# Set personal aliases, overriding those provided by oh-my-zsh libs,
+# plugins, and themes. Aliases can be placed here, though oh-my-zsh
+# users are encouraged to define aliases within the ZSH_CUSTOM folder.
+# For a full list of active aliases, run `alias`.
+#
+# Example aliases
+# alias zshconfig="mate ~/.zshrc"
+# alias ohmyzsh="mate ~/.oh-my-zsh"
+#
+
+HISTSIZE=130000
+SAVEHIST=130000
+
+if type rg >/dev/null 2>&1 ; then
+    export FZF_DEFAULT_COMMAND='rg --hidden --files'
+    export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+fi
+export FZF_DEFAULT_OPTS='--reverse --bind "ctrl-/:toggle-preview,ctrl-d:page-down,ctrl-u:page-up,ctrl-p:up,ctrl-n:down"'
+
+
+if [[ ! -z $TMUX ]]; then
+    export FZF_TMUX=1
+fi
+
 # === Load aliases, functions, and local settings ===
 
 source $DOTFILES/zsh/alias.zsh
@@ -250,3 +301,37 @@ function auto_venv() {
 }
 add-zsh-hook chpwd auto_venv
 auto_venv
+
+# Make Ctrl-P/N search by begining like Up/Down arrow keys do.
+bindkey '^P' up-line-or-beginning-search
+bindkey '^N' down-line-or-beginning-search
+
+# brew
+export HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"
+export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
+export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git"
+export HOMEBREW_CORE_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git"
+
+# openjdk
+export PATH="/usr/local/opt/openjdk@11/bin:$PATH"
+export CPPFLAGS="-I/usr/local/opt/openjdk@11/include"
+
+# pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
+export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+
+# gnubin
+export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
+
+# golang
+export PATH="/usr/local/opt/go@1.19/bin:$PATH"
+# java
+export JAVA_HOME=$(/usr/libexec/java_home)
+
+# git-subrepo
+source /Users/twcai/workspace/github/git-subrepo/.rc
+fpath=('/Users/twcai/workspace/github/git-subrepo/share/zsh-completion' $fpath)
