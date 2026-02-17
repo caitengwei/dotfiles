@@ -1,13 +1,29 @@
 {
   "permissions": {
     "allow": [
+      "WebFetch",
       "Read",
       "Glob",
       "Grep",
-      "WebFetch",
+      "Task",
       "WebSearch",
-      "Bash(ls *)",
-      "Bash(cat *)",
+      "Write(./src/**)",
+      "Edit(./src/**)",
+      "Write(./tests/**)",
+      "Edit(./tests/**)",
+      "Write(./docs/**)",
+      "Edit(./docs/**)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(tail:*)",
+      "Bash(ps:*)",
+      "Bash(npm run:*)",
+      "Bash(pnpm run:*)",
+      "Bash(yarn:*)",
+      "Bash(mvn:*)",
+      "Bash(gradle:*)",
+      "Bash(python:*)",
       "Bash(head *)",
       "Bash(tail *)",
       "Bash(wc *)",
@@ -47,7 +63,26 @@
       "Bash(gh release view*)",
       "Bash(gh release list*)",
       "Bash(gh api *)"
-    ]
+    ],
+    "deny": [
+      "Read(./prod-secrets/**)",
+      "Read(./.env.prod*)",
+      "Read(./**/*secret*)",
+      "Read(./**/*token*)",
+      "Bash(sudo:*)",
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push --force-with-lease:*)"
+    ],
+    "ask": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm publish:*)",
+      "Bash(pnpm publish:*)",
+      "Bash(kubectl apply:*)",
+      "Bash(kubectl delete:*)"
+    ],
+    "defaultMode": "plan"
   },
   "statusLine": {
     "type": "command",
@@ -67,6 +102,11 @@
     ]
   },
   "enabledPlugins": {
-    "context7@claude-plugins-official": true
-  }
+    "Notion@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "obsidian@obsidian-skills": true,
+    "superpowers@claude-plugins-official": true
+  },
+  "alwaysThinkingEnabled": true
+}
 }
