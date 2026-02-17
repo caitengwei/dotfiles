@@ -336,5 +336,7 @@ export PATH="/usr/local/opt/go@1.19/bin:$PATH"
 export JAVA_HOME=$(/usr/libexec/java_home)
 
 # git-subrepo
-source /Users/twcai/workspace/github/git-subrepo/.rc
-fpath=('/Users/twcai/workspace/github/git-subrepo/share/zsh-completion' $fpath)
+if [[ -f /Users/twcai/workspace/github/git-subrepo/.rc ]]; then
+  source /Users/twcai/workspace/github/git-subrepo/.rc
+  fpath=('/Users/twcai/workspace/github/git-subrepo/share/zsh-completion' $fpath)
+fi
