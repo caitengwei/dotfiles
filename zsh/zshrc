@@ -1,3 +1,6 @@
+# Ensure DOTFILES is set (zshenv may not be linked)
+: ${DOTFILES:=$HOME/dotfiles}
+
 # Re-prioritize custom paths for macOS.
 # On macOS, /etc/zprofile runs path_helper which reads /etc/paths and
 # /etc/paths.d/*, prepending system paths to PATH. This happens after
