@@ -70,47 +70,52 @@ precmd_functions+=(emit_osc133)
 # === Antigen settings ===
 
 # Install Antigen if not already installed
-[[ ! -d "$HOME/.antigen" ]] && git clone --depth 1 https://github.com/zsh-users/antigen.git "$HOME/.antigen"
+[[ ! -d "$HOME/.antigen" ]] && git clone --quiet --depth 1 https://github.com/zsh-users/antigen.git "$HOME/.antigen"
 source "$HOME/.antigen/antigen.zsh"
 
-# Load the oh-my-zsh library
-antigen use oh-my-zsh
+# Only run bundle declarations once per shell session.
+# Re-sourcing zshrc would otherwise trigger antigen's "already installed" messages.
+if [[ -z "$_ANTIGEN_INITIALIZED" ]]; then
+    # Load the oh-my-zsh library
+    antigen use oh-my-zsh
 
-# Load plugins
-if type fzf >/dev/null 2>&1 ; then
-    antigen bundle Aloxaf/fzf-tab
-fi
-antigen bundle colored-man-pages
-antigen bundle extract
-antigen bundle git-prompt
-antigen bundle jeffreytse/zsh-vi-mode
-antigen bundle zsh-users/zsh-autosuggestions
-antigen bundle zsh-users/zsh-completions
-antigen bundle zsh-users/zsh-syntax-highlighting
-# zsh-history-substring-search should be loaded after zsh-syntax-highlighting
-antigen bundle zsh-users/zsh-history-substring-search
-
-if [[ $IS_MACOS == true ]]; then
-    antigen bundle macos
-    antigen bundle brew
-fi
-
-# The following plugins will be loaded only when the corresponding commands exist.
-typeset -A commands_to_plugins=(
-    "bazel" "bazel"
-    "mvn" "mvn"
-)
-
-for cmd in ${(@k)commands_to_plugins}; do
-    if [[ $(command -v "$cmd") ]]; then
-        antigen bundle "$commands_to_plugins[$cmd]"
+    # Load plugins
+    if type fzf >/dev/null 2>&1 ; then
+        antigen bundle Aloxaf/fzf-tab
     fi
-done
+    antigen bundle colored-man-pages
+    antigen bundle extract
+    antigen bundle git-prompt
+    antigen bundle jeffreytse/zsh-vi-mode
+    antigen bundle zsh-users/zsh-autosuggestions
+    antigen bundle zsh-users/zsh-completions
+    antigen bundle zsh-users/zsh-syntax-highlighting
+    # zsh-history-substring-search should be loaded after zsh-syntax-highlighting
+    antigen bundle zsh-users/zsh-history-substring-search
 
-antigen theme $DOTFILES/zsh my-theme --no-local-clone
+    if [[ $IS_MACOS == true ]]; then
+        antigen bundle macos
+        antigen bundle brew
+    fi
 
-# Apply antigen bundles
-antigen apply
+    # The following plugins will be loaded only when the corresponding commands exist.
+    typeset -A commands_to_plugins=(
+        "bazel" "bazel"
+        "mvn" "mvn"
+    )
+
+    for cmd in ${(@k)commands_to_plugins}; do
+        if [[ $(command -v "$cmd") ]]; then
+            antigen bundle "$commands_to_plugins[$cmd]"
+        fi
+    done
+
+    antigen theme $DOTFILES/zsh my-theme --no-local-clone
+
+    # Apply antigen bundles
+    antigen apply 2>/dev/null
+    export _ANTIGEN_INITIALIZED=1
+fi
 
 # === plugin configs ===
 
@@ -194,7 +199,7 @@ if type fzf >/dev/null 2>&1 ; then
     export FZF_CTRL_T_OPTS
     FZF_CTRL_R_OPTS="
     --preview 'echo {}' --preview-window up:3:hidden:wrap
-    --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
+    --bind 'ctrl-y:execute-silent(echo -n {2..} | yank)+abort'
     --color header:italic
     --header 'CTRL-Y to copy command; CTRL-/ to preview full command'"
     FZF_CTRL_R_OPTS="${FZF_CTRL_R_OPTS//$'\n'    / }"
@@ -242,20 +247,6 @@ bindkey -e
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 #
-
-HISTSIZE=130000
-SAVEHIST=130000
-
-if type rg >/dev/null 2>&1 ; then
-    export FZF_DEFAULT_COMMAND='rg --hidden --files'
-    export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-fi
-export FZF_DEFAULT_OPTS='--reverse --bind "ctrl-/:toggle-preview,ctrl-d:page-down,ctrl-u:page-up,ctrl-p:up,ctrl-n:down"'
-
-
-if [[ ! -z $TMUX ]]; then
-    export FZF_TMUX=1
-fi
 
 # === Load aliases, functions, and local settings ===
 
@@ -305,19 +296,17 @@ function auto_venv() {
 add-zsh-hook chpwd auto_venv
 auto_venv
 
-# Make Ctrl-P/N search by begining like Up/Down arrow keys do.
-bindkey '^P' up-line-or-beginning-search
-bindkey '^N' down-line-or-beginning-search
+if [[ $IS_MACOS == true ]]; then
+    # brew
+    export HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"
+    export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
+    export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git"
+    export HOMEBREW_CORE_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git"
 
-# brew
-export HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"
-export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
-export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git"
-export HOMEBREW_CORE_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git"
-
-# openjdk
-export PATH="/usr/local/opt/openjdk@11/bin:$PATH"
-export CPPFLAGS="-I/usr/local/opt/openjdk@11/include"
+    # openjdk
+    export PATH="/usr/local/opt/openjdk@11/bin:$PATH"
+    export CPPFLAGS="-I/usr/local/opt/openjdk@11/include"
+fi
 
 # pyenv
 export PYENV_ROOT="$HOME/.pyenv"
@@ -326,17 +315,23 @@ eval "$(pyenv init -)"
 if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
 export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
-# gnubin
-export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
+if [[ $IS_MACOS == true ]]; then
+    # gnubin
+    export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+    export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
 
-# golang
-export PATH="/usr/local/opt/go@1.19/bin:$PATH"
+    # golang
+    export PATH="/usr/local/opt/go@1.19/bin:$PATH"
+fi
 # java
-export JAVA_HOME=$(/usr/libexec/java_home)
+if [[ $IS_MACOS == true ]]; then
+    export JAVA_HOME=$(/usr/libexec/java_home 2>/dev/null)
+elif command -v java &>/dev/null; then
+    export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+fi
 
 # git-subrepo
-if [[ -f /Users/twcai/workspace/github/git-subrepo/.rc ]]; then
-  source /Users/twcai/workspace/github/git-subrepo/.rc
-  fpath=('/Users/twcai/workspace/github/git-subrepo/share/zsh-completion' $fpath)
+if [[ -f "$HOME/workspace/github/git-subrepo/.rc" ]]; then
+  source "$HOME/workspace/github/git-subrepo/.rc"
+  fpath=("$HOME/workspace/github/git-subrepo/share/zsh-completion" $fpath)
 fi

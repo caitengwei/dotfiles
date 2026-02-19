@@ -84,10 +84,6 @@
     ],
     "defaultMode": "plan"
   },
-  "statusLine": {
-    "type": "command",
-    "command": "~/.claude/statusline-command.sh"
-  },
   "hooks": {
     "Notification": [
       {
@@ -101,12 +97,16 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline-command.sh"
+  },
   "enabledPlugins": {
     "Notion@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,
     "obsidian@obsidian-skills": true,
     "superpowers@claude-plugins-official": true
   },
-  "alwaysThinkingEnabled": true
-}
+  "alwaysThinkingEnabled": true,
+  "autoUpdatesChannel": "latest"
 }
