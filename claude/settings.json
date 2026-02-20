@@ -13,19 +13,18 @@
       "Edit(./tests/**)",
       "Write(./docs/**)",
       "Edit(./docs/**)",
-      "Bash(ls:*)",
-      "Bash(cat:*)",
-      "Bash(grep:*)",
-      "Bash(tail:*)",
-      "Bash(ps:*)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(grep *)",
+      "Bash(tail *)",
+      "Bash(ps *)",
       "Bash(npm run:*)",
       "Bash(pnpm run:*)",
       "Bash(yarn:*)",
       "Bash(mvn:*)",
       "Bash(gradle:*)",
-      "Bash(python:*)",
+      "Bash(python *)",
       "Bash(head *)",
-      "Bash(tail *)",
       "Bash(wc *)",
       "Bash(which *)",
       "Bash(man *)",
@@ -108,5 +107,6 @@
     "superpowers@claude-plugins-official": true
   },
   "alwaysThinkingEnabled": true,
-  "autoUpdatesChannel": "latest"
+  "autoUpdatesChannel": "latest",
+  "model": "opus"
 }
