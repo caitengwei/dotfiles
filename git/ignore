@@ -15,3 +15,5 @@ CLAUDE.local.md
 
 # pyenv version file
 .python-version
+
+**/.claude/settings.local.json

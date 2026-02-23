@@ -107,6 +107,5 @@
     "superpowers@claude-plugins-official": true
   },
   "alwaysThinkingEnabled": true,
-  "autoUpdatesChannel": "latest",
-  "model": "opus"
+  "autoUpdatesChannel": "latest"
 }
