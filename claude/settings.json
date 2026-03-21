@@ -16,6 +16,11 @@
       "Bash(ls *)",
       "Bash(cat *)",
       "Bash(grep *)",
+      "Bash(rg *)",
+      "Bash(find *)",
+      "Bash(sed *)",
+      "Bash(awk *)",
+      "Bash(jq *)",
       "Bash(tail *)",
       "Bash(ps *)",
       "Bash(npm run:*)",
@@ -41,6 +46,7 @@
       "Bash(git show*)",
       "Bash(git branch*)",
       "Bash(git remote -v*)",
+      "Bash(git commit:*)",
       "Bash(git -C * status*)",
       "Bash(git -C * log*)",
       "Bash(git -C * diff*)",
@@ -74,14 +80,12 @@
       "Bash(git push --force-with-lease:*)"
     ],
     "ask": [
-      "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(npm publish:*)",
       "Bash(pnpm publish:*)",
       "Bash(kubectl apply:*)",
       "Bash(kubectl delete:*)"
-    ],
-    "defaultMode": "plan"
+    ]
   },
   "hooks": {
     "Notification": [
@@ -107,5 +111,6 @@
     "superpowers@claude-plugins-official": true
   },
   "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
   "autoUpdatesChannel": "latest"
 }
