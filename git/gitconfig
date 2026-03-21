@@ -31,13 +31,13 @@
 [credential]
     helper = store
 [filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	required = true
-	process = git-lfs filter-process
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    required = true
+    process = git-lfs filter-process
 [oh-my-zsh]
     hide-status = 1
     hide-dirty = 1
 [user]
-	name = tengweicai
-	email = tengweicai@gmail.com
+    name = tengweicai
+    email = tengweicai@gmail.com
