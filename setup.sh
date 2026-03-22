@@ -55,6 +55,21 @@ link_file() {
     return 1
 }
 
+install_skills() {
+    local src_root=$1 dst_root=$2
+    local skill_repo
+
+    mkdir -p "$dst_root"
+    if [[ ! -d "$src_root" ]]; then
+        return 0
+    fi
+
+    for skill_repo in "$src_root"/*; do
+        [[ -d "$skill_repo" ]] || continue
+        link_file "$skill_repo" "$dst_root/$(basename "$skill_repo")"
+    done
+}
+
 if [[ "$base_dir" != "$HOME/dotfiles" ]]; then
     link_file "$base_dir" ~/dotfiles
 fi
@@ -90,6 +105,12 @@ mkdir -p ~/.claude
 for f in "$base_dir"/claude/*; do
     link_file "$f" ~/.claude/"$(basename "$f")"
 done
+
+echo "Setting up agent skills..."
+install_skills "$base_dir/skills" ~/.claude/skills
+
+mkdir -p ~/.codex
+install_skills "$base_dir/skills" ~/.codex/skills
 
 mkdir -p ~/.config
 xdg_configs=(nvim tmux git lsd wezterm ghostty yazi)

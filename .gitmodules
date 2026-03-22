@@ -1,9 +1,3 @@
-[submodule "skills/Humanizer-zh"]
-	path = skills/Humanizer-zh
-	url = git@github.com:op7418/Humanizer-zh.git
-[submodule "skills/superpowers"]
-	path = skills/superpowers
-	url = git@github.com:obra/superpowers.git
-[submodule "skills/obsidian-skills"]
-	path = skills/obsidian-skills
-	url = git@github.com:kepano/obsidian-skills.git
+[submodule "skills"]
+	path = skills
+	url = git@github.com:caitengwei/my-skills.git
