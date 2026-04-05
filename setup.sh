@@ -58,16 +58,23 @@ link_file() {
 install_skills() {
     local src_root=$1 dst_root=$2
     local skill_repo
+    local found_skill_repo=false
 
     mkdir -p "$dst_root"
     if [[ ! -d "$src_root" ]]; then
+        printf "Warning: agent skills source not found at %s; run 'git submodule update --init --recursive' if you want to install skills.\n" "$src_root" >&2
         return 0
     fi
 
     for skill_repo in "$src_root"/*; do
         [[ -d "$skill_repo" ]] || continue
+        found_skill_repo=true
         link_file "$skill_repo" "$dst_root/$(basename "$skill_repo")"
     done
+
+    if [[ "$found_skill_repo" != "true" ]]; then
+        printf "Warning: no top-level skill repositories found in %s; hidden directories are skipped. Run 'git submodule update --init --recursive' if skills are missing.\n" "$src_root" >&2
+    fi
 }
 
 if [[ "$base_dir" != "$HOME/dotfiles" ]]; then

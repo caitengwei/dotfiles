@@ -46,15 +46,13 @@ function _custom_keybinds ()
     # Make space trigger history expansion (e.g., !!, !$) before inserting it
     bindkey ' ' magic-space
 
-    if [[ $IS_MACOS == true ]]; then
-        # Copy current command buffer to clipboard
-        function copy-command-to-clipboard() {
-            echo -n "$BUFFER" | pbcopy
-            zle -M "Command copied to clipboard"
-        }
-        zle -N copy-command-to-clipboard
-        bindkey '^X^Y' copy-command-to-clipboard
-    fi
+    # Copy current command buffer to clipboard
+    function copy-command-to-clipboard() {
+        echo -n "$BUFFER" | yank
+        zle -M "Command copied to clipboard"
+    }
+    zle -N copy-command-to-clipboard
+    bindkey '^X^Y' copy-command-to-clipboard
 }
 # Postpone keybindings until zsh-vi-mode is loaded,
 # otherwise they will be overridden by zsh-vi-mode.
@@ -277,7 +275,21 @@ fi
 
 # uv shell completion
 if type uv >/dev/null 2>&1; then
-    eval "$(uv generate-shell-completion zsh)"
+    # Load uv completion only when completion is first requested.
+    _uv_lazy_completion() {
+        # Register uv's real completion function (`_uv`) on demand.
+        source <(uv generate-shell-completion zsh)
+        # Remove this bootstrap function after first use.
+        unfunction _uv_lazy_completion 2>/dev/null
+
+        if (( $+functions[_uv] )); then
+            _uv "$@"
+        else
+            _default "$@"
+        fi
+    }
+
+    compdef _uv_lazy_completion uv
 fi
 
 # Auto activate/deactivate venv
@@ -335,4 +347,3 @@ if [[ -f "$HOME/workspace/github/git-subrepo/.rc" ]]; then
   source "$HOME/workspace/github/git-subrepo/.rc"
   fpath=("$HOME/workspace/github/git-subrepo/share/zsh-completion" $fpath)
 fi
-
