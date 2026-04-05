@@ -18,9 +18,8 @@ bash setup.sh
 
 | 目录 | 链接目标 | 说明 |
 |------|----------|------|
-| `zsh/zshrc` | `~/.zshrc` | Zsh 主配置，oh-my-zsh 主题 bira |
-| `zsh/oh-my-zsh` | `~/.oh-my-zsh` | oh-my-zsh（Git 子模块） |
-| `zsh/oh_my_zsh_custom/` | — | 自定义插件和主题目录 |
+| `zsh/zshenv` | `~/.zshenv` | PATH、环境变量与基础环境检测 |
+| `zsh/zshrc` | `~/.zshrc` | Zsh 主配置，使用 Antigen 加载 oh-my-zsh 生态 |
 | `zsh/alias.zsh` | — | 全局别名（`H`/`L`/`G`/`F`/`C`/`N`） |
 | `zsh/functions.zsh` | — | 自定义函数 |
 | `git/gitconfig` | `~/.gitconfig` | Git 配置 |
@@ -28,16 +27,14 @@ bash setup.sh
 | `vim/vimrc` | `~/.vimrc` | Vim 配置 |
 | `nvim/` | `~/.config/nvim` | Neovim 配置（Lua） |
 | `tmux/tmux.conf` | `~/.tmux.conf` | Tmux 配置 |
-| `tmux/tpm/` | — | Tmux Plugin Manager（Git 子模块） |
+| `claude/` | `~/.claude/*` | Claude Code 本地配置 |
+| `skills/` | `~/.claude/skills` / `~/.codex/skills` | Agent skills 子模块 |
 | `hammerspoon/` | `~/.hammerspoon` | macOS 窗口管理（仅 Darwin） |
 | `bin/` | — | 自定义脚本，加入 `$PATH` |
 
 ## Git 子模块
 
-- `zsh/oh-my-zsh` — oh-my-zsh
-- `zsh/oh_my_zsh_custom/plugins/zsh-syntax-highlighting` — 语法高亮
-- `zsh/oh_my_zsh_custom/plugins/async` — zsh-async
-- `tmux/tpm` — Tmux Plugin Manager
+- `skills/` — agent skills 仓库
 
 更新子模块：`git submodule update --remote`
 
