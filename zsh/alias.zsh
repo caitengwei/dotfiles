@@ -3,6 +3,7 @@ alias -g L="| less"
 alias -g VL="| vless"
 alias -g G="| grep -i"
 alias -g F="| fzf --reverse"
+alias -g Y="| yank"
 
 # Copy to system clipboard
 : ${IS_MACOS:=$([[ $OSTYPE == darwin* ]] && echo true || echo false)}
