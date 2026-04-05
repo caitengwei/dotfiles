@@ -23,12 +23,20 @@
       "Bash(jq *)",
       "Bash(tail *)",
       "Bash(ps *)",
+      "Bash(pip index versions:*)",
+      "Bash(pip install:*)",
+      "Bash(pyenv versions:*)",
+      "Bash(pyenv install:*)",
+      "Bash(pyenv local:*)",
       "Bash(npm run:*)",
       "Bash(pnpm run:*)",
       "Bash(yarn:*)",
       "Bash(mvn:*)",
       "Bash(gradle:*)",
+      "Bash(python -m venv:*)",
       "Bash(python *)",
+      "Bash(python3:*)",
+      "Bash(source:*)",
       "Bash(head *)",
       "Bash(wc *)",
       "Bash(which *)",
@@ -44,6 +52,7 @@
       "Bash(git log*)",
       "Bash(git diff*)",
       "Bash(git show*)",
+      "Bash(git add:*)",
       "Bash(git branch*)",
       "Bash(git remote -v*)",
       "Bash(git commit:*)",
@@ -58,6 +67,7 @@
       "Bash(gh pr status*)",
       "Bash(gh pr checks*)",
       "Bash(gh pr diff*)",
+      "Bash(gh auth:*)",
       "Bash(gh issue view*)",
       "Bash(gh issue list*)",
       "Bash(gh issue status*)",
@@ -107,13 +117,20 @@
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,
     "obsidian@obsidian-skills": true,
-    "superpowers@claude-plugins-official": true
+    "superpowers@claude-plugins-official": true,
+    "codex@openai-codex": true
   },
   "extraKnownMarketplaces": {
     "obsidian-skills": {
       "source": {
         "source": "github",
         "repo": "kepano/obsidian-skills"
+      }
+    },
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
       }
     }
   },
