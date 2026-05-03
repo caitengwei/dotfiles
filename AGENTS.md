@@ -21,6 +21,8 @@ This repository stores personal development environment configuration and suppor
 - **`skills/`** - Agent skill library checked out as a Git submodule and installed into both `~/.claude/skills` and `~/.codex/skills`.
 - **`installers/`** - Standalone install scripts for individual tools such as `fd`, `fzf`, `tmux`, and `yazi`.
 - **`bin/`** - Utility scripts intended to be used from `$PATH`.
+- **`CLAUDE.md`** - Claude Code-facing repository guide. Keep cross-agent instructions aligned with this file when conventions change.
+- **`README.md`** - Public-facing quick overview and installation note.
 - **`setup.sh`** - Interactive bootstrap script that creates symlinks and installs some dependencies/configs.
 
 ## Installation And Deployment Conventions
@@ -34,8 +36,10 @@ This repository stores personal development environment configuration and suppor
 4. **Setup does more than symlinks**:
    - Links top-level configs into `~/.zshrc`, `~/.zshenv`, `~/.vimrc`, `~/.gitconfig`, `~/.gitignore`, `~/.tmux.conf`, `~/.hammerspoon`, and `~/.config/*`.
    - Links files from `claude/` into `~/.claude/`.
-   - Mirrors directories from `skills/` into both `~/.claude/skills` and `~/.codex/skills`.
+   - Symlinks each directory from `skills/` into both `~/.claude/skills` and `~/.codex/skills`.
    - Runs `vim +PlugInstall +qall` during setup.
+
+5. **Backups stay local**: Choosing the `backup` option in `setup.sh` writes timestamped backups under `.backups.local/`, which is local machine state and should not become tracked source.
 
 ## Working Conventions
 
@@ -50,6 +54,8 @@ This repository stores personal development environment configuration and suppor
 5. **Do not treat ignored/generated artifacts as source**: Examples include `nvim/lazy-lock.json`, `vim/temp_dirs`, `nvim/temp_dirs`, `vim/installed_plugins/**`, and Hammerspoon annotation files under `hammerspoon/Spoons/EmmyLua.spoon/annotations`.
 
 6. **macOS-specific code stays isolated**: Hammerspoon config is Darwin-only. Do not introduce macOS assumptions into shared shell/editor config unless guarded appropriately.
+
+7. **Keep agent guides aligned**: When changing repository-wide conventions for agents, update both `AGENTS.md` and `CLAUDE.md` or intentionally document why they differ.
 
 ## Commit Message Convention
 
