@@ -117,6 +117,7 @@ echo "Setting up agent skills..."
 install_skills "$base_dir/skills" ~/.claude/skills
 
 mkdir -p ~/.codex
+link_file "$base_dir/codex/config.toml" ~/.codex/config.toml
 install_skills "$base_dir/skills" ~/.codex/skills
 
 mkdir -p ~/.config

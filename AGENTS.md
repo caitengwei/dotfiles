@@ -18,6 +18,7 @@ This repository stores personal development environment configuration and suppor
 - **`yazi/`** - Yazi file manager configuration.
 - **`lsd/`** - `lsd` configuration.
 - **`claude/`** - Claude Code / agent-related local configuration files linked into `~/.claude/`.
+- **`codex/`** - Codex CLI / TUI configuration linked into `~/.codex/`.
 - **`skills/`** - Agent skill library checked out as a Git submodule and installed into both `~/.claude/skills` and `~/.codex/skills`.
 - **`installers/`** - Standalone install scripts for individual tools such as `fd`, `fzf`, `tmux`, and `yazi`.
 - **`bin/`** - Utility scripts intended to be used from `$PATH`.
@@ -36,6 +37,7 @@ This repository stores personal development environment configuration and suppor
 4. **Setup does more than symlinks**:
    - Links top-level configs into `~/.zshrc`, `~/.zshenv`, `~/.vimrc`, `~/.gitconfig`, `~/.gitignore`, `~/.tmux.conf`, `~/.hammerspoon`, and `~/.config/*`.
    - Links files from `claude/` into `~/.claude/`.
+   - Links `codex/config.toml` into `~/.codex/config.toml`.
    - Symlinks each directory from `skills/` into both `~/.claude/skills` and `~/.codex/skills`.
    - Runs `vim +PlugInstall +qall` during setup.
 

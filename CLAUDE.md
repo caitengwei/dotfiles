@@ -28,6 +28,7 @@ bash setup.sh
 | `nvim/` | `~/.config/nvim` | Neovim 配置（Lua） |
 | `tmux/tmux.conf` | `~/.tmux.conf` | Tmux 配置 |
 | `claude/` | `~/.claude/*` | Claude Code 本地配置 |
+| `codex/config.toml` | `~/.codex/config.toml` | Codex CLI / TUI 配置 |
 | `skills/` | `~/.claude/skills` / `~/.codex/skills` | Agent skills 子模块 |
 | `hammerspoon/` | `~/.hammerspoon` | macOS 窗口管理（仅 Darwin） |
 | `bin/` | — | 自定义脚本，加入 `$PATH` |
