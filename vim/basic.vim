@@ -220,13 +220,11 @@ endfunction
 function! SwitchNumber()
     if(&relativenumber)
         set norelativenumber
-        set number
     elseif(&number)
-        set norelativenumber
         set nonumber
     else
+        set number
         set relativenumber
-        set nonumber
     endif
 endfunc
 
