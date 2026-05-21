@@ -1,20 +1,33 @@
 #!/bin/bash
 
-input=$(cat)
+# Guard: kill entire script if it runs longer than 3 seconds
+TIMEOUT_PID=$$
+(sleep 3 && kill -9 $TIMEOUT_PID 2>/dev/null) &
+WATCHDOG=$!
+trap 'kill $WATCHDOG 2>/dev/null' EXIT
 
-# --- Claude Code session data ---
-remaining=$(echo "$input" | jq -r '.context_window.remaining_percentage // empty')
-agent_name=$(echo "$input" | jq -r '.agent.name // empty')
-model=$(echo "$input" | jq -r '.model.display_name // empty')
-cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty')
-input_tokens=$(echo "$input" | jq -r '.context_window.total_input_tokens // empty')
-output_tokens=$(echo "$input" | jq -r '.context_window.total_output_tokens // empty')
-lines_added=$(echo "$input" | jq -r '.cost.total_lines_added // empty')
-lines_removed=$(echo "$input" | jq -r '.cost.total_lines_removed // empty')
-duration_ms=$(echo "$input" | jq -r '.cost.total_duration_ms // empty')
-cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // empty')
+# Read stdin with timeout — prevents hang if pipe isn't closed
+input=""
+while IFS= read -r -t 2 line; do
+    input+="$line"
+done
 
-# --- ANSI colors (matching shell theme: yellow prompt, blue git, green time) ---
+[ -z "$input" ] && exit 0
+
+# Parse all JSON fields in a single jq call
+eval "$(echo "$input" | jq -r '
+  @sh "remaining=\(.context_window.remaining_percentage // "")",
+  @sh "agent_name=\(.agent.name // "")",
+  @sh "model=\(.model.display_name // "")",
+  @sh "cost=\(.cost.total_cost_usd // "")",
+  @sh "input_tokens=\(.context_window.total_input_tokens // "")",
+  @sh "output_tokens=\(.context_window.total_output_tokens // empty)",
+  @sh "lines_added=\(.cost.total_lines_added // "")",
+  @sh "lines_removed=\(.cost.total_lines_removed // "")",
+  @sh "duration_ms=\(.cost.total_duration_ms // "")",
+  @sh "cwd=\(.workspace.current_dir // .cwd // "")"
+' 2>/dev/null | tr '\n' ' ')"
+
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 GREEN='\033[0;32m'
@@ -23,25 +36,24 @@ RESET='\033[0m'
 
 SEP="·"
 
-# --- Shell-theme-derived: directory (like %~ in RPROMPT) ---
+# --- Directory ---
 dir_info=""
 if [ -n "$cwd" ]; then
-    # Abbreviate $HOME to ~
     home_escaped=$(printf '%s\n' "$HOME" | sed 's/[[\.*^$()+?{|]/\\&/g')
     short_dir=$(echo "$cwd" | sed "s|^${home_escaped}|~|")
     dir_info=$(printf "${YELLOW}%s${RESET}" "$short_dir")
 fi
 
-# --- Shell-theme-derived: git branch (like git_super_status in RPROMPT) ---
+# --- Git branch (with timeout to prevent hang on lock/network) ---
 git_info=""
 if [ -n "$cwd" ] && [ -d "$cwd" ]; then
-    branch=$(git -C "$cwd" --no-optional-locks symbolic-ref --short HEAD 2>/dev/null)
+    branch=$(timeout 1 git -C "$cwd" --no-optional-locks symbolic-ref --short HEAD 2>/dev/null)
     if [ -n "$branch" ]; then
         git_info=$(printf "${BLUE}%s${RESET}" "$branch")
     fi
 fi
 
-# --- Shell-theme-derived: time (like %* in RPROMPT) ---
+# --- Time ---
 time_info=$(printf "${GREEN}%s${RESET}" "$(date +%H:%M:%S)")
 
 # --- Agent name ---
@@ -92,7 +104,7 @@ if [ -n "$duration_ms" ]; then
     fi
 fi
 
-# --- Assemble: shell-theme section first, then Claude session info ---
+# --- Assemble ---
 parts=()
 [ -n "$dir_info" ]       && parts+=("$dir_info")
 [ -n "$git_info" ]       && parts+=("$git_info")

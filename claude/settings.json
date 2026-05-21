@@ -97,6 +97,7 @@
       "Bash(kubectl delete:*)"
     ]
   },
+  "model": "opus[1m]",
   "hooks": {
     "Notification": [
       {
