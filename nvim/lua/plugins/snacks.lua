@@ -2,14 +2,6 @@ local snacks_keys = {}
 
 -- snacks.picker configurations --
 
-local function oil_current_dir()
-  local exists, oil = pcall(require, "oil")
-  if not exists then
-    return nil
-  end
-  return oil.get_current_dir()
-end
-
 local function prompt_for_search_dir(callback)
   -- If buffer is not under cwd, prompt for the search directory.
   local buffer_dir = vim.fn.expand("%:p:h")
@@ -34,19 +26,14 @@ end
 local function picker_smart_files(opts)
   opts = opts or {}
   if not opts.cwd then
-    local oil_dir = oil_current_dir()
-    if oil_dir then
-      opts.cwd = oil_dir
+    local callback = function(dir)
+      opts.cwd = dir
+      picker_smart_files(opts)
+    end
+    if prompt_for_search_dir(callback) then
+      return
     else
-      local callback = function(dir)
-        opts.cwd = dir
-        picker_smart_files(opts)
-      end
-      if prompt_for_search_dir(callback) then
-        return
-      else
-        opts.cwd = vim.fn.getcwd()
-      end
+      opts.cwd = vim.fn.getcwd()
     end
   end
   if not opts.filter then
@@ -120,17 +107,12 @@ end
 local function picker_grep(opts)
   opts = opts or {}
   if not opts.dirs then
-    local oil_dir = oil_current_dir()
-    if oil_dir then
-      opts.cwd = oil_dir
-    else
-      local callback = function(dir)
-        opts.dirs = { dir }
-        picker_grep(opts)
-      end
-      if prompt_for_search_dir(callback) then
-        return
-      end
+    local callback = function(dir)
+      opts.dirs = { dir }
+      picker_grep(opts)
+    end
+    if prompt_for_search_dir(callback) then
+      return
     end
   end
   require("snacks.picker").grep(opts)
@@ -150,6 +132,47 @@ local function picker_grep_word(opts)
   require("snacks.picker").grep_word(opts)
 end
 
+local function picker_buffer_words()
+  local term_buf = vim.api.nvim_get_current_buf()
+  local term_chan = vim.bo[term_buf].channel
+
+  local items = {}
+  local seen = {}
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(buf) then
+      local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+      for _, line in ipairs(lines) do
+        for word in line:gmatch("[%w_]+") do
+          if #word >= 2 and word:match("[%a_]") and not seen[word] then
+            seen[word] = true
+            table.insert(items, { text = word })
+          end
+        end
+      end
+    end
+  end
+
+  require("snacks.picker").pick({
+    source = "buffer_words",
+    title = "Buffer words",
+    items = items,
+    format = function(item)
+      return { { item.text } }
+    end,
+    preview = "none",
+    layout = { preview = false },
+    confirm = function(picker, item)
+      picker:close()
+      if item and term_chan and term_chan > 0 then
+        vim.api.nvim_chan_send(term_chan, item.text)
+        vim.schedule(function()
+          vim.cmd("startinsert")
+        end)
+      end
+    end,
+  })
+end
+
 local function picker_dirs(opts)
   opts = opts or {}
   -- Set default for hidden if not specified
@@ -158,19 +181,14 @@ local function picker_dirs(opts)
   end
   local search_dir
   if not opts.cwd then
-    local oil_dir = oil_current_dir()
-    if oil_dir then
-      search_dir = oil_dir
+    local callback = function(dir)
+      opts.cwd = dir
+      picker_dirs(opts)
+    end
+    if prompt_for_search_dir(callback) then
+      return
     else
-      local callback = function(dir)
-        opts.cwd = dir
-        picker_dirs(opts)
-      end
-      if prompt_for_search_dir(callback) then
-        return
-      else
-        search_dir = vim.fn.getcwd()
-      end
+      search_dir = vim.fn.getcwd()
     end
     opts.cwd = search_dir
   end
@@ -267,6 +285,7 @@ local function picker_keys()
     -- Lines
     { "<leader>fl", function() p().lines() end, desc = "Search lines" },
     { "<leader>fL", function() p().grep_buffers() end, desc = "Search lines from all buffers" },
+    { "<c-]><c-w>", picker_buffer_words, desc = "Insert word from buffers", mode = "t" },
     --  Misc
     { "<leader>fu", function() p().undo() end, desc = "Find undo history" },
     { "<leader>f:", function() p().command_history() end, desc = "Find command history" },
@@ -493,7 +512,9 @@ return {
     gitbrowse = {
       what = "permalink",
     },
-    explorer = {},
+    explorer = {
+      replace_netrw = false,
+    },
     dashboard = dashboard_opts,
     scope = {},
     image = image_opts,
@@ -522,9 +543,12 @@ return {
         vim.print = _G.dd -- Override print to use snacks for `:=` command
 
         Snacks.toggle.zoom():map("<leader>wz"):map("<c-w>z"):map("<c-z><c-z>", { mode = { "n", "v", "i" } })
-        -- Zoom terminal window
-        -- <c-\><c-n>: return to normal mode, <c-w>z: zoom, i: enter insert mode
-        vim.keymap.set("t", "<c-z><c-z>", [[<c-\><c-n><c-w>zi]], { desc = "Toggle zoom" })
+        -- Zoom terminal window: leave terminal mode, toggle zoom, re-enter.
+        vim.keymap.set("t", "<c-]><c-z>", function()
+          vim.cmd("stopinsert")
+          Snacks.toggle.zoom():toggle()
+          vim.schedule(function() vim.cmd("startinsert") end)
+        end, { desc = "Toggle zoom" })
 
         Snacks.toggle.zen():map("<leader>uz")
         Snacks.toggle.option("spell", { name = "spelling" }):map("<leader>us")

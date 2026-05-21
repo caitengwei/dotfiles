@@ -1,8 +1,7 @@
-require("leader_key")
 require("double_cmdq_to_quit")
 require("modifier_key_monitor").start()
+require("keymaps")
 require("vim_mode")
-require("browser_selector")
 ---@diagnostic disable-next-line: param-type-mismatch
 pcall(hs.fnutils.partial(require, "local"))
 

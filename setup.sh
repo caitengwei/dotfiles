@@ -106,6 +106,7 @@ link_file "$base_dir/tmux/tmux.conf" ~/.tmux.conf
 if [[ `uname` == "Darwin" ]]; then
     echo "Setting up Hammerspoon..."
     link_file "$base_dir/hammerspoon" ~/.hammerspoon
+    "$base_dir/macos/copy_default_key_binding.sh"
 fi
 
 mkdir -p ~/.claude

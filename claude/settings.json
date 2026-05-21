@@ -95,7 +95,8 @@
       "Bash(pnpm publish:*)",
       "Bash(kubectl apply:*)",
       "Bash(kubectl delete:*)"
-    ]
+    ],
+    "defaultMode": "auto"
   },
   "model": "opus[1m]",
   "hooks": {
@@ -119,7 +120,8 @@
     "claude-md-management@claude-plugins-official": true,
     "obsidian@obsidian-skills": true,
     "superpowers@claude-plugins-official": true,
-    "codex@openai-codex": true
+    "codex@openai-codex": true,
+    "context7@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "obsidian-skills": {
@@ -139,5 +141,9 @@
   "effortLevel": "high",
   "autoUpdatesChannel": "latest",
   "skipDangerousModePermissionPrompt": true,
+  "skipAutoPermissionPrompt": true,
+  "editorMode": "vim",
+  "remoteControlAtStartup": true,
+  "agentPushNotifEnabled": true,
   "theme": "dark-daltonized"
 }

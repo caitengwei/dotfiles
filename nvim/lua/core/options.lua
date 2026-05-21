@@ -57,6 +57,7 @@ opt.ruler = true
 
 -- Highlight current line
 opt.cursorline = true
+opt.cursorlineopt = "line"
 
 -- Hide cmdline unless needed
 opt.cmdheight = 0
@@ -118,6 +119,9 @@ opt.fillchars = {
 -- Persistent undo history
 opt.undofile = true
 
+-- Load project-local .nvim.lua (trusted via :trust)
+opt.exrc = true
+
 ---------------------
 -- Text/tabs settings
 ---------------------
@@ -158,3 +162,17 @@ opt.diffopt = vim.list_extend(
   opt.diffopt:get(),
   { "algorithm:histogram", "linematch:60" }
 )
+
+-- In a remote tmux session (ssh/mosh/et all set SSH_CONNECTION), override
+-- clipboard copy to use the yank script — it targets the right tmux client
+-- so OSC 52 reaches the terminal even from floating panes (popups) and
+-- populates the tmux paste buffer. Outside tmux, nvim's default OSC 52
+-- handling is sufficient.
+if os.getenv('SSH_CONNECTION') and os.getenv('TMUX') then
+  local osc52 = require('vim.ui.clipboard.osc52')
+  vim.g.clipboard = {
+    name = 'OSC 52 (yank)',
+    copy = { ['+'] = 'yank', ['*'] = 'yank' },
+    paste = { ['+'] = osc52.paste('+'), ['*'] = osc52.paste('*') },
+  }
+end

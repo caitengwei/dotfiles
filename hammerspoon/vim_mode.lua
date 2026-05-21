@@ -70,11 +70,9 @@ module.toggle = function()
     end
 end
 
-local leader_key = require("leader_key")
-leader_key.bind({}, "v", module.toggle)
+hs.hotkey.bind({ "ctrl", "cmd", "alt", "shift" }, "v", module.toggle)
 
 local key_stroke_fn = require("utils").key_stroke_fn
-local system_key_stroke_fn = require("utils").system_key_stroke_fn
 
 local bind_fn = function(mode, mod, key, fn, can_repeat)
     local pressed_fn = nil
@@ -93,6 +91,14 @@ end
 local bind_key = function(mode, source_mod, source_key, target_mod, target_key, can_repeat)
     local fn = key_stroke_fn(target_mod, target_key)
     bind_fn(mode, source_mod, source_key, fn, can_repeat)
+end
+
+-- Fire `fn` on key press (not release), without repeating. Used for
+-- operator/prefix keys (d, c, g) so that typing the follow-up key quickly
+-- (e.g. `dw`) doesn't let the follow-up fire in the parent mode before
+-- we've switched into the sub-mode.
+local bind_press_fn = function(mode, mod, key, fn)
+    mode.modal:bind(mod, key, fn, nil, nil)
 end
 
 -- === Normal mode ===
@@ -114,13 +120,13 @@ bind_key(normal, {}, '0', { 'cmd' }, 'left', false)
 bind_key(normal, { 'shift' }, '4', { 'cmd' }, 'right', false)
 
 -- gg -> move to the beginning of the file
-bind_fn(normal, {}, 'g', function()
+bind_press_fn(normal, {}, 'g', function()
     switch_to_mode(normal_g)
-end, false)
-bind_fn(normal_g, {}, 'g', function()
+end)
+bind_press_fn(normal_g, {}, 'g', function()
     key_stroke_fn({ 'cmd' }, 'up')()
     switch_to_mode(normal)
-end, false)
+end)
 
 -- G -> move to the end of the file
 bind_key(normal, { 'shift' }, 'g', { 'cmd' }, 'down', false)
@@ -146,58 +152,66 @@ bind_key(normal, {}, 'p', { 'cmd' }, 'v', false)
 bind_key(normal, {}, 'x', {}, 'forwarddelete', true)
 
 -- Implement c_ d_ commands
-bind_fn(normal, {}, 'c', function()
+bind_press_fn(normal, {}, 'c', function()
     switch_to_mode(normal_c)
-end, false)
-bind_fn(normal, {}, 'd', function()
+end)
+bind_press_fn(normal, {}, 'd', function()
     switch_to_mode(normal_d)
-end, false)
+end)
 for _, op in ipairs({ 'c', 'd' }) do
     local mode = op == 'c' and normal_c or normal_d
     local target_mode = op == 'c' and insert or normal
     -- w/e -> delete word forward
-    bind_fn(mode, {}, 'w', function()
+    bind_press_fn(mode, {}, 'w', function()
         key_stroke_fn({ 'alt' }, 'forwarddelete')()
         switch_to_mode(target_mode)
-    end, false)
-    bind_fn(mode, {}, 'e', function()
+    end)
+    bind_press_fn(mode, {}, 'e', function()
         key_stroke_fn({ 'alt' }, 'forwarddelete')()
         switch_to_mode(target_mode)
-    end, false)
+    end)
     -- b -> delete word backwards
-    bind_fn(mode, {}, 'b', function()
+    bind_press_fn(mode, {}, 'b', function()
         key_stroke_fn({ 'alt' }, 'delete')()
         switch_to_mode(target_mode)
-    end, false)
+    end)
     -- 0/$ -> delete to the beginning/end of the line
-    bind_fn(mode, {}, '0', function()
+    bind_press_fn(mode, {}, '0', function()
         key_stroke_fn({ 'cmd' }, 'delete')()
         switch_to_mode(target_mode)
-    end, false)
-    bind_fn(mode, { 'shift' }, '4', function()
+    end)
+    bind_press_fn(mode, { 'shift' }, '4', function()
         key_stroke_fn({ 'ctrl' }, 'k')()
         switch_to_mode(target_mode)
-    end, false)
+    end)
     -- cc/dd -> delete the whole line
-    bind_fn(mode, {}, op, function()
+    bind_press_fn(mode, {}, op, function()
         key_stroke_fn({ 'cmd' }, 'right')()
         key_stroke_fn({ 'cmd' }, 'delete')()
         if op == 'd' then
-            key_stroke_fn({ '' }, 'forwarddelete')()
+            key_stroke_fn({}, 'forwarddelete')()
         end
         switch_to_mode(target_mode)
-    end, false)
+    end)
     -- C/D -> delete to the end of the line
-    bind_fn(normal, { 'shift' }, op, function()
+    bind_press_fn(normal, { 'shift' }, op, function()
         key_stroke_fn({ 'ctrl' }, 'k')()
         switch_to_mode(target_mode)
-    end, false)
+    end)
 end
 
 -- u -> undo
 bind_key(normal, {}, 'u', { 'cmd' }, 'z', true)
 -- ctrl + r -> redo
 bind_key(normal, { 'ctrl' }, 'r', { 'shift', 'cmd' }, 'z', true)
+
+-- escape -> cancel any pending operator (no-op in plain normal)
+bind_fn(normal, {}, 'escape', function() end, false)
+
+-- escape from pending-operator / g sub-modes back to normal
+for _, sub in ipairs({ normal_g, normal_c, normal_d }) do
+    bind_fn(sub, {}, 'escape', function() switch_to_mode(normal) end, false)
+end
 
 -- i/I/a/A/o/O -> switch to insert mode
 bind_fn(normal, {}, 'i', function()
@@ -217,13 +231,13 @@ bind_fn(normal, { 'shift' }, 'a', function()
 end, false)
 bind_fn(normal, {}, 'o', function()
     key_stroke_fn({ 'cmd' }, 'right')()
-    key_stroke_fn({ '' }, 'return')()
+    key_stroke_fn({}, 'return')()
     switch_to_mode(insert)
 end, false)
 bind_fn(normal, { 'shift' }, 'o', function()
     key_stroke_fn({ 'cmd' }, 'left')()
-    key_stroke_fn({ '' }, 'return')()
-    key_stroke_fn({ '' }, 'up')()
+    key_stroke_fn({}, 'return')()
+    key_stroke_fn({}, 'up')()
     switch_to_mode(insert)
 end, false)
 
@@ -252,9 +266,12 @@ visual.modal.entered = function()
 end
 
 local visual_bind_key = function(source_mod, source_key, target_mod, target_key, right)
-    table.insert(target_mod, 'shift')
+    local mods = { 'shift' }
+    for _, m in ipairs(target_mod) do
+        table.insert(mods, m)
+    end
     local fn = function()
-        key_stroke_fn(target_mod, target_key)()
+        key_stroke_fn(mods, target_key)()
         visual.is_cursor_right_to_start = right
     end
     bind_fn(visual, source_mod, source_key, fn, true)
@@ -289,16 +306,20 @@ bind_fn(visual, { 'ctrl' }, 'd', function()
 end, true)
 
 -- gg -> move to the beginning of the file
-bind_fn(visual, {}, 'g', function()
+bind_press_fn(visual, {}, 'g', function()
     switch_to_mode(visual_g)
-end, false)
-bind_fn(visual_g, {}, 'g', function()
+end)
+bind_press_fn(visual_g, {}, 'g', function()
     key_stroke_fn({ 'shift', 'cmd' }, 'up')()
     visual.is_cursor_right_to_start = false
     switch_to_mode(visual)
-end, false)
+end)
 -- G -> move to the end of the file
 visual_bind_key({ 'shift' }, 'g', { 'cmd' }, 'down', true)
+
+-- escape from visual:g back to visual
+bind_fn(visual_g, {}, 'escape', function() switch_to_mode(visual) end, false)
+
 
 local visual_to_normal = function(clear_selection)
     if clear_selection == nil then
@@ -331,47 +352,28 @@ end, false)
 
 -- x/d -> delete visual selection
 bind_fn(visual, {}, 'x', function()
-    key_stroke_fn({ '' }, 'forwarddelete')()
+    key_stroke_fn({}, 'forwarddelete')()
     visual_to_normal(false)
 end, false)
 bind_fn(visual, {}, 'd', function()
-    key_stroke_fn({ '' }, 'forwarddelete')()
+    key_stroke_fn({}, 'forwarddelete')()
     visual_to_normal(false)
 end, false)
 
 -- c -> delete visual selection and switch to insert mode
 bind_fn(visual, {}, 'c', function()
-    key_stroke_fn({ '' }, 'forwarddelete')()
+    key_stroke_fn({}, 'forwarddelete')()
     switch_to_mode(insert)
 end, false)
 
--- v/esc/ctrl-[ -> switch to normal mode
+-- v/esc -> switch to normal mode
 bind_fn(visual, {}, 'v', visual_to_normal, false)
 bind_fn(visual, {}, 'escape', visual_to_normal, false)
-bind_fn(visual, { 'ctrl' }, '[', visual_to_normal, false)
 
 -- ==== Insert mode ====
 
 bind_fn(insert, {}, 'escape', function() switch_to_mode(normal) end, false)
-bind_fn(insert, { 'ctrl' }, '[', function() switch_to_mode(normal) end, false)
 
--- ==== Addtional bindings for both off/insert modes ====
-
-for _, mode in ipairs({ off, insert }) do
-    -- alt-hjkl -> arrow keys
-    bind_key(mode, { 'alt' }, 'h', {}, 'left', true)
-    bind_key(mode, { 'alt' }, 'j', {}, 'down', true)
-    bind_key(mode, { 'alt' }, 'k', {}, 'up', true)
-    bind_key(mode, { 'alt' }, 'l', {}, 'right', true)
-
-    -- alt-m/n -> ctrl-tab and ctrl-shift-tab
-    bind_key(mode, { 'alt' }, 'm', { 'ctrl' }, 'tab', true)
-    bind_key(mode, { 'alt' }, 'n', { 'ctrl', 'shift' }, 'tab', true)
-
-    bind_fn(mode, { 'alt' }, ',', system_key_stroke_fn('SOUND_DOWN'), true)
-    bind_fn(mode, { 'alt' }, '.', system_key_stroke_fn('SOUND_UP'), true)
-    bind_fn(mode, { 'alt' }, '/', system_key_stroke_fn('MUTE'), false)
-end
 
 switch_to_mode(off)
 return module

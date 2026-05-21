@@ -11,3 +11,4 @@ vim/temp_dirs
 nvim/temp_dirs
 vim/installed_plugins/**
 hammerspoon/local.lua
+yazi/plugins

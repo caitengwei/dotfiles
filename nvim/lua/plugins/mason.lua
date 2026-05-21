@@ -1,24 +1,32 @@
-local function setup_mason_tool_installer()
-  require("mason-tool-installer").setup({
+local mason_tool_installer = {
+  "WhoIsSethDaniel/mason-tool-installer.nvim",
+  cmd = {
+    "MasonToolsInstall",
+    "MasonToolsInstallSync",
+    "MasonToolsUpdate",
+    "MasonToolsUpdateSync",
+    "MasonToolsClean",
+  },
+  dependencies = {
+    "mason-org/mason.nvim",
+    "mason-org/mason-lspconfig.nvim",
+  },
+  build = ":MasonToolsInstall",
+  opts = {
     ensure_installed = {
+      "bashls",
+      "clangd",
+      "lua_ls",
+      "basedpyright",
+      "vimls",
       "black",
       "ruff",
       "debugpy",
+      "tree-sitter-cli",
+      "marksman",
     },
-  })
-  -- Manually call the check_install function,
-  -- because mason-tool-installer doesn't automatically install packages
-  -- when it's lazily loaded.
-  require("mason-tool-installer").check_install(false, false)
-end
-
-local mason_tool_installer = {
-  "WhoIsSethDaniel/mason-tool-installer.nvim",
-  lazy = true,
-  dependencies = {
-    "williamboman/mason.nvim",
+    run_on_start = false,
   },
-  config = setup_mason_tool_installer,
 }
 
 local mason = {
@@ -30,6 +38,17 @@ local mason = {
   },
 }
 
+local mason_lspconfig = {
+  "mason-org/mason-lspconfig.nvim",
+  lazy = true,
+  dependencies = {
+    "mason-org/mason.nvim",
+  },
+  opts = {
+    automatic_enable = false,
+  },
+}
+
 if os.getenv("NVIM_DEV") == "0" then
   return {}
 end
@@ -37,4 +56,5 @@ end
 return {
   mason_tool_installer,
   mason,
+  mason_lspconfig,
 }

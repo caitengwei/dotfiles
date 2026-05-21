@@ -1,5 +1,6 @@
 local map = vim.keymap.set
 local utils = require("core.utils")
+local ts_yank = require("core.treesitter")
 
 -- Leader configuration
 vim.g.mapleader = ' '
@@ -41,6 +42,86 @@ map('n', '<c-l>', '<c-w>l', { desc = 'Move to right window' })
 map('n', '<c-j>', '<c-w>j', { desc = 'Move to lower window' })
 map('n', '<c-k>', '<c-w>k', { desc = 'Move to upper window' })
 
+-- Window resize submode: <leader>wr enters, hjkl resize (HJKL for small steps),
+-- = equalizes, q/<Esc> or any other key exits. A floating hint stays visible.
+local function resize_mode()
+  local hint = ' Resize: hjkl: ±5  HJKL: ±1  =: equalize  q/<Esc>: exit '
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { hint })
+  local win = vim.api.nvim_open_win(buf, false, {
+    relative = 'editor',
+    anchor = 'SE',
+    row = vim.o.lines - vim.o.cmdheight - 1,
+    col = vim.o.columns,
+    width = #hint,
+    height = 1,
+    style = 'minimal',
+    border = 'rounded',
+    focusable = false,
+    zindex = 250,
+  })
+  vim.wo[win].winhighlight = 'Normal:ModeMsg,FloatBorder:ModeMsg'
+
+  local function close()
+    pcall(vim.api.nvim_win_close, win, true)
+    pcall(vim.api.nvim_buf_delete, buf, { force = true })
+  end
+
+  while true do
+    vim.cmd('redraw')
+    local ok, ch = pcall(vim.fn.getcharstr)
+    if not ok or ch == '' or ch == '\27' or ch == 'q' then break end
+    if ch == 'h' then
+      vim.cmd('vertical resize -5')
+    elseif ch == 'l' then
+      vim.cmd('vertical resize +5')
+    elseif ch == 'j' then
+      vim.cmd('resize -5')
+    elseif ch == 'k' then
+      vim.cmd('resize +5')
+    elseif ch == 'H' then
+      vim.cmd('vertical resize -1')
+    elseif ch == 'L' then
+      vim.cmd('vertical resize +1')
+    elseif ch == 'J' then
+      vim.cmd('resize -1')
+    elseif ch == 'K' then
+      vim.cmd('resize +1')
+    elseif ch == '=' then
+      vim.cmd('wincmd =')
+    else
+      break
+    end
+  end
+  close()
+end
+map('n', '<leader>wr', resize_mode, { desc = 'Window resize mode' })
+map('t', '<C-]>r', resize_mode, { desc = 'Window resize mode' })
+
+-- Cross-boundary navigation: vim splits + tmux panes.
+-- Falls back to tmux when there's no vim window in that direction, or when
+-- the current window is a float (don't disturb the underlying split).
+local nav_tmux_flag = { h = 'L', j = 'D', k = 'U', l = 'R' }
+local function nav(direction)
+  return function()
+    local in_float = vim.api.nvim_win_get_config(0).relative ~= ''
+    local moved = false
+    if not in_float then
+      local prev = vim.api.nvim_get_current_win()
+      pcall(vim.cmd, 'wincmd ' .. direction)
+      moved = vim.api.nvim_get_current_win() ~= prev
+    end
+    if not moved and vim.env.TMUX and vim.env.TMUX ~= '' then
+      local socket = vim.split(vim.env.TMUX, ',')[1]
+      vim.fn.system({ 'tmux', '-S', socket, 'select-pane', '-t', vim.env.TMUX_PANE, '-' .. nav_tmux_flag[direction] })
+    end
+  end
+end
+map({ 'n', 't', 'i' }, '<C-M-h>', nav('h'), { desc = 'Move to left window or tmux pane' })
+map({ 'n', 't', 'i' }, '<C-M-j>', nav('j'), { desc = 'Move to lower window or tmux pane' })
+map({ 'n', 't', 'i' }, '<C-M-k>', nav('k'), { desc = 'Move to upper window or tmux pane' })
+map({ 'n', 't', 'i' }, '<C-M-l>', nav('l'), { desc = 'Move to right window or tmux pane' })
+
 -- UI toggles
 map('n', '<leader>uh', '<cmd>set hlsearch!<cr>', { desc = 'Toggle search highlight' })
 map('n', '<leader>un', function()
@@ -57,6 +138,10 @@ end, { desc = 'Toggle line number mode' })
 
 map('n', '<leader>uw', '<cmd>set wrap!<cr>', { desc = 'Toggle line wrapping' })
 map('n', '<leader>us', '<cmd>set spell!<cr>', { desc = 'Toggle spell checking' })
+map('n', '<leader>um', function()
+  vim.o.mouse = vim.o.mouse == '' and 'a' or ''
+  vim.notify('Mouse ' .. (vim.o.mouse == '' and 'disabled' or 'enabled'))
+end, { desc = 'Toggle mouse' })
 
 -- Text manipulation
 map('x', '<', '<gv', { remap = true, desc = 'Indent left (keep selection)' })
@@ -89,6 +174,36 @@ map({ 'n' }, '<leader>yl', function()
   utils.yank_to_register(string.format("%s:%d", vim.fn.expand("%:p"), vim.fn.line(".")))
 end, { desc = 'Yank full buffer path with line number' })
 
+map("n", "<leader>ym", function() ts_yank.yank_ancestor_name("function") end, { desc = "Yank method/function name" })
+map("n", "<leader>yc", function() ts_yank.yank_ancestor_name("class") end, { desc = "Yank class name" })
+map("n", "<leader>yM", ts_yank.yank_class_method_name, { desc = "Yank class::method name" })
+
+map({ "n", "x" }, "<leader>yg", function()
+  Snacks.gitbrowse.open({
+    what = "permalink",
+    notify = false,
+    open = function(url) utils.yank_to_register(url) end,
+  })
+end, { desc = "Yank GitHub permalink for current line/selection" })
+
+map("n", "<leader>yu", function()
+  local cword = vim.fn.expand("<cWORD>")
+  -- Strip surrounding punctuation (brackets, parens, quotes, angle brackets)
+  cword = cword:match("[%(<\"'%[]*(.-)[\")'>%]]*$") or cword
+  -- Check if it looks like a URL
+  if cword:match("^https?://") or cword:match("^file://") then
+    utils.yank_to_register(cword)
+  else
+    -- Fall back to path under cursor
+    local path = vim.fn.expand("<cfile>")
+    if path ~= "" then
+      utils.yank_to_register(path)
+    else
+      vim.notify("No URL or path under cursor", vim.log.levels.WARN)
+    end
+  end
+end, { desc = "Yank URL or path under cursor" })
+
 -- Make n/N direction consistent regardless of / or ? search
 map("n", "n", "'Nn'[v:searchforward].'zv'", { expr = true, desc = "Next Search Result" })
 map("x", "n", "'Nn'[v:searchforward]", { expr = true, desc = "Next Search Result" })
@@ -116,8 +231,9 @@ map('c', '<c-x><c-d>', '<C-R>=expand("%:p:h")."/"<cr>', { desc = 'Insert directo
 map('c', '<c-x><c-f>', '<C-R>=expand("%:p")<cr>', { desc = 'Insert file path' })
 
 -- Terminal Mappings
-map("t", "<c-\\><c-\\>", "<c-\\><c-n>", { desc = "Enter Normal Mode" })
-map("t", "<C-\\><C-r>", function()
+map("t", "<c-]><c-]>", "<c-\\><c-n>", { desc = "Enter Normal Mode" })
+map("t", "<c-]>]", "<c-]>", { noremap = true, desc = "Send literal C-]" })
+map("t", "<C-]><C-r>", function()
   local registers = '*+"-:.%/#=_abcdefghijklmnopqrstuvwxyz0123456789'
   local lines = {}
   for i = 1, #registers do
@@ -163,10 +279,14 @@ map("t", "<C-\\><C-r>", function()
 end, { desc = "Paste register" })
 
 -- Terminal window navigation
-map('t', '<C-\\><C-h>', '<cmd>wincmd h<cr>', { desc = 'Move to left window' })
-map('t', '<C-\\><C-j>', '<cmd>wincmd j<cr>', { desc = 'Move to lower window' })
-map('t', '<C-\\><C-k>', '<cmd>wincmd k<cr>', { desc = 'Move to upper window' })
-map('t', '<C-\\><C-l>', '<cmd>wincmd l<cr>', { desc = 'Move to right window' })
+map('t', '<C-]><C-h>', '<cmd>wincmd h<cr>', { desc = 'Move to left window' })
+map('t', '<C-]><C-j>', '<cmd>wincmd j<cr>', { desc = 'Move to lower window' })
+map('t', '<C-]><C-k>', '<cmd>wincmd k<cr>', { desc = 'Move to upper window' })
+map('t', '<C-]><C-l>', '<cmd>wincmd l<cr>', { desc = 'Move to right window' })
+
+-- Terminal tab navigation
+map('t', '<C-]><Tab>', '<cmd>tabn<cr>', { desc = 'Next tab' })
+map('t', '<C-]><S-Tab>', '<cmd>tabp<cr>', { desc = 'Previous tab' })
 
 -- Enhanced gf/gF mappings:
 -- Check for line number after the filename (supports: file:10 or file line(s) 10)

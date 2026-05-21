@@ -40,7 +40,7 @@ local server_settings = {
 }
 
 local function setup_lsp_basics()
-  vim.lsp.set_log_level("warn")
+  vim.lsp.log.set_level("warn")
 
   local float_win_opts = { border = 'single' }
 
@@ -178,23 +178,6 @@ local function setup_lsp_servers()
   end
 end
 
-local mason_lspconfig = {
-  "mason-org/mason-lspconfig.nvim",
-  dependencies = {
-    "mason-org/mason.nvim",
-  },
-  opts = {
-    automatic_enable = false,
-    ensure_installed = {
-      "bashls",
-      "clangd",
-      "lua_ls",
-      "basedpyright",
-      "vimls",
-    },
-  },
-}
-
 local goto_preview = {
   'rmagatti/goto-preview',
   opts = {
@@ -220,7 +203,7 @@ local lspconfig = {
   end,
   dependencies = {
     "saghen/blink.cmp",
-    mason_lspconfig,
+    "mason-org/mason-lspconfig.nvim",
     goto_preview,
   },
 }

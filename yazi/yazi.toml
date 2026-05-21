@@ -1,2 +1,18 @@
 [mgr]
+ratio = [1, 3, 3]
 show_hidden = true
+linemode = "custom_linemode"
+
+[opener]
+vim = [
+	{ run = 'vim "$@"', block = true, desc = "Vim" },
+]
+
+[open]
+prepend_rules = [
+	{ mime = "image/*", use = [ "open", "vim", "reveal", "show_exif"] },
+]
+
+[preview]
+max_width=1500
+max_height=1500

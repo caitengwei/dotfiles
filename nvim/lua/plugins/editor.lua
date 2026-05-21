@@ -1,38 +1,8 @@
-local vim_tmux_navigator = {
-  "christoomey/vim-tmux-navigator",
-  keys = {
-    { "<C-M-H>", "<cmd>TmuxNavigateLeft<cr>", mode = { "n", "t", "i" }, desc = "TmuxNavigateLeft" },
-    { "<C-M-J>", "<cmd>TmuxNavigateDown<cr>", mode = { "n", "t", "i" }, desc = "TmuxNavigateDown" },
-    { "<C-M-K>", "<cmd>TmuxNavigateUp<cr>", mode = { "n", "t", "i" }, desc = "TmuxNavigateUp" },
-    { "<C-M-L>", "<cmd>TmuxNavigateRight<cr>", mode = { "n", "t", "i" }, desc = "TmuxNavigateRight" },
-    { "<C-M-\\>", "<cmd>TmuxNavigatePrevious<cr>", mode = { "n", "t", "i" }, desc = "TmuxNavigatePrevious" },
-  },
-  init = function()
-    vim.cmd([[
-        let g:tmux_navigator_no_mappings = 1
-      ]])
-  end,
-}
-
 local vim_sleuth = {
   "tpope/vim-sleuth",
   event = "VeryLazy",
 }
 
-local vim_oscyank = {
-  "ojroques/vim-oscyank",
-  event = "VeryLazy",
-  init = function()
-    vim.cmd([[
-      let g:oscyank_silent = 1
-      " Automatically copy text that was yanked to register +.
-      autocmd TextYankPost *
-          \ if v:event.operator is 'y' && v:event.regname is '+' |
-          \ execute 'OSCYankRegister +' |
-          \ endif
-    ]])
-  end,
-}
 
 local which_key = {
   "folke/which-key.nvim",
@@ -126,7 +96,7 @@ local mini_ai = {
     return {
       n_lines = 500,
       custom_textobjects = {
-        o = ai.gen_spec.treesitter({ -- code block
+        k = ai.gen_spec.treesitter({ -- code block
           a = { "@block.outer", "@conditional.outer", "@loop.outer" },
           i = { "@block.inner", "@conditional.inner", "@loop.inner" },
         }),
@@ -154,6 +124,14 @@ local mini_ai = {
         u = ai.gen_spec.function_call(), -- u for "Usage"
         U = ai.gen_spec.function_call({ name_pattern = "[%w_]" }), -- without dot in function name
       },
+      mappings = {
+        -- Disable the following as the default mappings conflict with
+        -- built-in LSP selection mappings on Neovim>=0.12
+        around_next = '',
+        inside_next = '',
+        around_last = '',
+        inside_last = '',
+      },
     }
   end,
   config = function(_, opts)
@@ -162,9 +140,7 @@ local mini_ai = {
 }
 
 return {
-  vim_tmux_navigator,
   vim_sleuth,
-  vim_oscyank,
   which_key,
   flash,
   mini_cursorword,

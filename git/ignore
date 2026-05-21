@@ -1,19 +1,21 @@
 # -*- mode: gitignore; -*-
 # vim: set filetype=gitignore:
 
+.DS_STORE
+
 compile_commands.json
 pyrightconfig.json
 .clangd
 
 /_tmp/
-# Ignore worktree directories
-/wt-*/
 
 # Claude Code per-project directories
-.claude/
+**/.claude/settings.local.json
 CLAUDE.local.md
+temp-claude-files/
 
 # pyenv version file
 .python-version
 
-**/.claude/settings.local.json
+# neovim project-local config (loaded via exrc)
+.nvim.lua

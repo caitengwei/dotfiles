@@ -1,5 +1,3 @@
-local utils = require("core.utils")
-
 local treesitter_filetypes = {
   "bash",
   "c",
@@ -16,180 +14,62 @@ local treesitter_filetypes = {
   "yaml",
 }
 
--- Return node text, handling nil nodes and buffer selection.
-local function ts_node_text(node, buf)
-  if not node then
-    return nil
-  end
-  return vim.treesitter.get_node_text(node, buf or 0)
+local function setup_treesitter_filetype_features(buf)
+  -- Enable syntax highlighting from Neovim's built-in Treesitter runtime.
+  vim.treesitter.start(buf)
+  -- Use Treesitter-aware indentation for better structural indent behavior.
+  vim.bo[buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+  -- Compute folds from syntax tree structure.
+  vim.opt_local.foldmethod = "expr"
+  vim.opt_local.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+  -- Keep folds expanded by default; folding is available on demand.
+  vim.opt_local.foldenable = false
 end
 
--- Best-effort name lookup for a node across language grammars.
-local function ts_node_name(node, buf)
-  if not node then
-    return nil
-  end
-  -- Prefer explicit "name" field when grammars expose it.
-  local name_node = node:field("name")[1]
-  if name_node then
-    return ts_node_text(name_node, buf)
-  end
-  -- Fall back to identifier-like children for looser grammars.
-  for child in node:iter_children() do
-    if child:named() then
-      local child_type = child:type()
-      if child_type == "identifier"
-          or child_type == "type_identifier"
-          or child_type == "variable_name"
-          or child_type:find("name", 1, true) then
-        return ts_node_text(child, buf)
-      end
+local function treesitter_install_preset(wait)
+  if vim.fn.executable("tree-sitter") ~= 1 then
+    local registry = require("mason-registry")
+    local pkg = registry.get_package("tree-sitter-cli")
+    if not pkg:is_installed() then
+      pkg:install()
+      vim.notify("Treesitter: installing tree-sitter-cli via Mason", vim.log.levels.INFO)
     end
   end
-  return nil
-end
 
--- Fetch the smallest Treesitter node at the cursor, if available.
-local function ts_node_at_cursor()
-  if vim.treesitter.get_node then
-    local ok, node = pcall(vim.treesitter.get_node, { ignore_injections = true })
-    if ok and node then
-      return node
+  if #treesitter_filetypes > 0 then
+    vim.notify("Treesitter: installing managed parsers", vim.log.levels.INFO)
+    local install = require("nvim-treesitter").install(treesitter_filetypes, {
+      summary = true,
+      max_jobs = 4,
+    })
+    if wait then
+      install:wait(300000)
     end
   end
-  -- Compatibility fallback for older Treesitter utils.
-  local ok, ts_utils = pcall(require, "nvim-treesitter.ts_utils")
-  if ok then
-    return ts_utils.get_node_at_cursor()
-  end
-  return nil
-end
-
-local function ts_function_node_and_name()
-  local node = ts_node_at_cursor()
-  while node do
-    local node_type = node:type()
-    local is_function_def = false
-    -- Skip call nodes; accept definition/declaration-ish nodes.
-    if node_type:find("call", 1, true) == nil
-        and (node_type:find("function", 1, true) or node_type:find("method", 1, true)) then
-      if node_type:find("definition", 1, true)
-          or node_type:find("declaration", 1, true)
-          or node:field("body")[1] ~= nil then
-        is_function_def = true
-      end
-    end
-    if is_function_def then
-      local name = ts_node_name(node, 0)
-      if name and name ~= "" then
-        return node, name
-      end
-    end
-    -- Walk up to the next enclosing node.
-    node = node:parent()
-  end
-  return nil, nil
-end
-
-local function ts_class_name_from_node(node)
-  while node do
-    if node:type():find("class", 1, true) then
-      local name = ts_node_name(node, 0)
-      if name and name ~= "" then
-        return name
-      end
-    end
-    node = node:parent()
-  end
-  return nil
-end
-
--- Walk up the AST and yank the nearest function/class definition name.
-local function yank_ts_ancestor_name(kind)
-  if kind == "function" then
-    local _, name = ts_function_node_and_name()
-    if name then
-      utils.yank_to_register(name)
-      return
-    end
-    vim.notify("No function name found at cursor", vim.log.levels.WARN)
-    return
-  end
-  if kind == "class" then
-    local name = ts_class_name_from_node(ts_node_at_cursor())
-    if name then
-      utils.yank_to_register(name)
-      return
-    end
-    vim.notify("No class name found at cursor", vim.log.levels.WARN)
-    return
-  end
-  vim.notify("Unsupported Treesitter yank kind", vim.log.levels.WARN)
-end
-
-local function yank_ts_class_method_name()
-  local func_node, func_name = ts_function_node_and_name()
-  if not func_name then
-    vim.notify("No function name found at cursor", vim.log.levels.WARN)
-    return
-  end
-  -- Find the nearest enclosing class for the function.
-  local class_name = ts_class_name_from_node(func_node:parent())
-  if not class_name then
-    vim.notify("No class name found for function", vim.log.levels.WARN)
-    return
-  end
-  utils.yank_to_register(string.format("%s::%s", class_name, func_name))
 end
 
 local function setup_treesitter(_, _)
-  local opts = {
-    highlight = { enable = true },
-    indent = { enable = true },
-    ensure_installed = treesitter_filetypes,
-  }
-  opts.textobjects = {
-    select = {
-      enable = false,
-    },
-    move = {
-      enable = true,
-      set_jumps = true,
-      goto_next_start = {
-        ["]k"] = { query = "@block.outer", desc = "Next block start" },
-        ["]f"] = { query = "@function.outer", desc = "Next function start" },
-        ["]a"] = { query = "@parameter.inner", desc = "Next parameter start" },
-        ["]C"] = { query = "@class.outer", desc = "Next class start" },
-      },
-      goto_next_end = {
-        ["]K"] = { query = "@block.outer", desc = "Next block end" },
-        ["]F"] = { query = "@function.outer", desc = "Next function end" },
-        ["]A"] = { query = "@parameter.inner", desc = "Next parameter end" },
-      },
-      goto_previous_start = {
-        ["[k"] = { query = "@block.outer", desc = "Previous block start" },
-        ["[f"] = { query = "@function.outer", desc = "Previous function start" },
-        ["[a"] = { query = "@parameter.inner", desc = "Previous parameter start" },
-        ["[C"] = { query = "@class.outer", desc = "Previous class start" },
-      },
-      goto_previous_end = {
-        ["[K"] = { query = "@block.outer", desc = "Previous block end" },
-        ["[F"] = { query = "@function.outer", desc = "Previous function end" },
-        ["[A"] = { query = "@parameter.inner", desc = "Previous parameter end" },
-      },
-    },
-  }
-  require("nvim-treesitter.configs").setup(opts)
-  -- Tree-sitter based folding.
-  for _, filetype in ipairs(treesitter_filetypes) do
-    vim.api.nvim_create_autocmd(
-      'FileType',
-      {
-        pattern = filetype,
-        command = 'setlocal foldmethod=expr foldexpr=nvim_treesitter#foldexpr() nofoldenable',
-      }
-    )
-  end
+  local ts = require("nvim-treesitter")
+  ts.setup({})
+  vim.api.nvim_create_user_command("TSInstallPreset", function()
+    treesitter_install_preset(false)
+  end, { desc = "Install preset Treesitter parsers" })
+
+  -- Tree-sitter based folding/highlighting.
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = treesitter_filetypes,
+    callback = function(args)
+      setup_treesitter_filetype_features(args.buf)
+    end,
+  })
+end
+
+local function build_treesitter()
+  vim.defer_fn(function()
+    -- Delay this call because mason isn't available during the build callback.
+    treesitter_install_preset(true)
+    require("nvim-treesitter").update():wait(300000)
+  end, 1000)
 end
 
 local function setup_treesitter_context(_, _)
@@ -205,23 +85,71 @@ local function setup_treesitter_context(_, _)
   end, { desc = "Go to context beginning" })
 end
 
+local treesitter_move_mappings = {
+  goto_next_start = {
+    { key = "]k", query = { "@block.outer", "@conditional.outer", "@loop.outer" }, desc = "Next block start" },
+    { key = "]f", query = "@function.outer", desc = "Next function start" },
+    { key = "]a", query = "@parameter.inner", desc = "Next parameter start" },
+    { key = "]]", query = "@class.outer", desc = "Next class start" },
+  },
+  goto_next_end = {
+    { key = "]K", query = { "@block.outer", "@conditional.outer", "@loop.outer" }, desc = "Next block end" },
+    { key = "]F", query = "@function.outer", desc = "Next function end" },
+    { key = "]A", query = "@parameter.inner", desc = "Next parameter end" },
+    { key = "][", query = "@class.outer", desc = "Next class end" },
+  },
+  goto_previous_start = {
+    { key = "[k", query = { "@block.outer", "@conditional.outer", "@loop.outer" }, desc = "Previous block start" },
+    { key = "[f", query = "@function.outer", desc = "Previous function start" },
+    { key = "[a", query = "@parameter.inner", desc = "Previous parameter start" },
+    { key = "[[", query = "@class.outer", desc = "Previous class start" },
+  },
+  goto_previous_end = {
+    { key = "[K", query = { "@block.outer", "@conditional.outer", "@loop.outer" }, desc = "Previous block end" },
+    { key = "[F", query = "@function.outer", desc = "Previous function end" },
+    { key = "[A", query = "@parameter.inner", desc = "Previous parameter end" },
+    { key = "[]", query = "@class.outer", desc = "Previous class end" },
+  },
+}
+
+local function setup_treesitter_textobjects(_, opts)
+  require("nvim-treesitter-textobjects").setup(opts)
+
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = treesitter_filetypes,
+    callback = function(args)
+      local move = require("nvim-treesitter-textobjects.move")
+      for mode_fn, mappings in pairs(treesitter_move_mappings) do
+        for _, mapping in ipairs(mappings) do
+          vim.keymap.set({ "n", "x", "o" }, mapping.key, function()
+            move[mode_fn](mapping.query, "textobjects")
+          end, { buffer = args.buf, desc = mapping.desc })
+        end
+      end
+    end,
+  })
+end
+
 return {
   {
     "nvim-treesitter/nvim-treesitter",
-    event = { "BufNew" },
-    build = ":TSUpdate",
-    keys = {
-      { "<leader>ym", function() yank_ts_ancestor_name("function") end, desc = "Yank method/function name", ft = treesitter_filetypes },
-      { "<leader>yc", function() yank_ts_ancestor_name("class") end, desc = "Yank class name", ft = treesitter_filetypes },
-      { "<leader>yM", yank_ts_class_method_name, desc = "Yank class::method name", ft = treesitter_filetypes },
-    },
+    lazy = false,
+    build = build_treesitter,
     config = setup_treesitter,
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter-textobjects",
-      {
-        "nvim-treesitter/nvim-treesitter-context",
-        config = setup_treesitter_context,
-      }
+  },
+  {
+    "nvim-treesitter/nvim-treesitter-textobjects",
+    event = { "BufReadPost", "BufNewFile" },
+    opts = {
+      move = {
+        set_jumps = true,
+      },
     },
+    config = setup_treesitter_textobjects,
+  },
+  {
+    "nvim-treesitter/nvim-treesitter-context",
+    event = { "BufReadPost", "BufNewFile" },
+    config = setup_treesitter_context,
   },
 }
