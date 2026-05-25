@@ -13,7 +13,8 @@ fu() {
     cd "$DIR"
 }
 
-# d - cd from directory stack
+# d - cd from directory stack (override oh-my-zsh's default)
+unalias d 2>/dev/null; unfunction d 2>/dev/null
 d() {
     local dir
     dir=$(dirs -p | tail -n +2 | fzf) || return
