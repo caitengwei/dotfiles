@@ -34,27 +34,27 @@ SEP="${DIM} ┆ ${RST}"
 
 # Agent
 agent_indicator=""
-[ -n "$agent_name" ] && agent_indicator="󰮄 ${agent_name}"
+[ -n "$agent_name" ] && agent_indicator="@${agent_name}"
 
 # Model
 model_info=""
-[ -n "$model" ] && model_info="󰚩 ${model}"
+[ -n "$model" ] && model_info="${model}"
 
 # Tokens
 token_info=""
 if [ -n "$input_tokens" ]; then
     in_k=$(awk "BEGIN {printf \"%.1f\", $input_tokens / 1000}")
     out_k=$(awk "BEGIN {printf \"%.1f\", ${output_tokens:-0} / 1000}")
-    token_info="󰍛 ${in_k}k↓ ${out_k}k↑"
+    token_info="${in_k}k/${out_k}k"
 fi
 
 # Context: threshold color + icon + fractional progress bar
 context_info=""
 if [ -n "$remaining" ]; then
     rem_int=$(printf "%.0f" "$remaining")
-    if   [ "$rem_int" -lt 10 ]; then ctx_color="${BOLD}${RED}";    ctx_icon="󰂎"
-    elif [ "$rem_int" -lt 20 ]; then ctx_color="${BOLD}${YELLOW}"; ctx_icon="󰁿"
-    else                             ctx_color="";                 ctx_icon="󰁹"
+    if   [ "$rem_int" -lt 10 ]; then ctx_color="${BOLD}${RED}"
+    elif [ "$rem_int" -lt 20 ]; then ctx_color="${BOLD}${YELLOW}"
+    else                             ctx_color=""
     fi
 
     bar_width=10
@@ -67,19 +67,19 @@ if [ -n "$remaining" ]; then
     for ((i=0; i<full_cells; i++)); do bar+="█"; done
     for ((i=0; i<empty_cells; i++)); do bar+="░"; done
 
-    context_info="${ctx_icon} ${bar} ${ctx_color}${rem_int}%${RST}"
+    context_info="${bar} ${ctx_color}${rem_int}%${RST}"
 fi
 
 # Lines
 lines_info=""
 if [ -n "$lines_added" ] || [ -n "$lines_removed" ]; then
-    lines_info="󰏫 +${lines_added:-0}${DIM}/${RST}-${lines_removed:-0}"
+    lines_info="+${lines_added:-0}${DIM}/${RST}-${lines_removed:-0}"
 fi
 
 # Cost
 cost_info=""
 if [ -n "$cost" ] && [ "$cost" != "0" ]; then
-    cost_info="󰇁 $(printf '%.2f' "$cost")"
+    cost_info="\$$(printf '%.2f' "$cost")"
 fi
 
 # Duration
@@ -90,11 +90,11 @@ if [ -n "$duration_ms" ]; then
     hours=$(( (total_secs % 86400) / 3600 ))
     mins=$(( (total_secs % 3600) / 60 ))
     if [ "$days" -gt 0 ]; then
-        duration_info="󱑍 ${days}d${hours}h"
+        duration_info="${days}d${hours}h"
     elif [ "$hours" -gt 0 ]; then
-        duration_info="󱑍 ${hours}h${mins}m"
+        duration_info="${hours}h${mins}m"
     else
-        duration_info="󱑍 ${mins}m"
+        duration_info="${mins}m"
     fi
 fi
 
