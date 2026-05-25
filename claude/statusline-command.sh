@@ -32,29 +32,50 @@ DIM=$'\e[2m'; BOLD=$'\e[1m'; RST=$'\e[0m'
 GREEN=$'\e[92m'; YELLOW=$'\e[93m'; RED=$'\e[91m'
 SEP="${DIM} ┆ ${RST}"
 
+# Detect Nerd Font: check if any NerdFont family is installed
+HAS_NERD_FONT=false
+if fc-list 2>/dev/null | grep -qi "Nerd Font"; then
+    HAS_NERD_FONT=true
+fi
+
+# Icons: Nerd Font or ASCII fallback
+if [ "$HAS_NERD_FONT" = true ]; then
+    ICON_AGENT="󰮄 "; ICON_MODEL="󰚩 "; ICON_TOKEN="󰍛 "
+    ICON_CTX_OK="󰁹"; ICON_CTX_MID="󰁿"; ICON_CTX_LOW="󰂎"
+    ICON_LINES="󰏫 "; ICON_COST="󰇁 "; ICON_TIME="󱑍 "
+else
+    ICON_AGENT="@"; ICON_MODEL=""; ICON_TOKEN=""
+    ICON_CTX_OK=""; ICON_CTX_MID=""; ICON_CTX_LOW=""
+    ICON_LINES=""; ICON_COST="\$"; ICON_TIME=""
+fi
+
 # Agent
 agent_indicator=""
-[ -n "$agent_name" ] && agent_indicator="@${agent_name}"
+[ -n "$agent_name" ] && agent_indicator="${ICON_AGENT}${agent_name}"
 
 # Model
 model_info=""
-[ -n "$model" ] && model_info="${model}"
+[ -n "$model" ] && model_info="${ICON_MODEL}${model}"
 
 # Tokens
 token_info=""
 if [ -n "$input_tokens" ]; then
     in_k=$(awk "BEGIN {printf \"%.1f\", $input_tokens / 1000}")
     out_k=$(awk "BEGIN {printf \"%.1f\", ${output_tokens:-0} / 1000}")
-    token_info="${in_k}k/${out_k}k"
+    if [ "$HAS_NERD_FONT" = true ]; then
+        token_info="${ICON_TOKEN}${in_k}k↓ ${out_k}k↑"
+    else
+        token_info="${in_k}k/${out_k}k"
+    fi
 fi
 
 # Context: threshold color + icon + fractional progress bar
 context_info=""
 if [ -n "$remaining" ]; then
     rem_int=$(printf "%.0f" "$remaining")
-    if   [ "$rem_int" -lt 10 ]; then ctx_color="${BOLD}${RED}"
-    elif [ "$rem_int" -lt 20 ]; then ctx_color="${BOLD}${YELLOW}"
-    else                             ctx_color=""
+    if   [ "$rem_int" -lt 10 ]; then ctx_color="${BOLD}${RED}";    ctx_icon="$ICON_CTX_LOW"
+    elif [ "$rem_int" -lt 20 ]; then ctx_color="${BOLD}${YELLOW}"; ctx_icon="$ICON_CTX_MID"
+    else                             ctx_color="";                 ctx_icon="$ICON_CTX_OK"
     fi
 
     bar_width=10
@@ -67,19 +88,23 @@ if [ -n "$remaining" ]; then
     for ((i=0; i<full_cells; i++)); do bar+="█"; done
     for ((i=0; i<empty_cells; i++)); do bar+="░"; done
 
-    context_info="${bar} ${ctx_color}${rem_int}%${RST}"
+    if [ -n "$ctx_icon" ]; then
+        context_info="${ctx_icon} ${bar} ${ctx_color}${rem_int}%${RST}"
+    else
+        context_info="${bar} ${ctx_color}${rem_int}%${RST}"
+    fi
 fi
 
 # Lines
 lines_info=""
 if [ -n "$lines_added" ] || [ -n "$lines_removed" ]; then
-    lines_info="+${lines_added:-0}${DIM}/${RST}-${lines_removed:-0}"
+    lines_info="${ICON_LINES}+${lines_added:-0}${DIM}/${RST}-${lines_removed:-0}"
 fi
 
 # Cost
 cost_info=""
 if [ -n "$cost" ] && [ "$cost" != "0" ]; then
-    cost_info="\$$(printf '%.2f' "$cost")"
+    cost_info="${ICON_COST}$(printf '%.2f' "$cost")"
 fi
 
 # Duration
@@ -90,11 +115,11 @@ if [ -n "$duration_ms" ]; then
     hours=$(( (total_secs % 86400) / 3600 ))
     mins=$(( (total_secs % 3600) / 60 ))
     if [ "$days" -gt 0 ]; then
-        duration_info="${days}d${hours}h"
+        duration_info="${ICON_TIME}${days}d${hours}h"
     elif [ "$hours" -gt 0 ]; then
-        duration_info="${hours}h${mins}m"
+        duration_info="${ICON_TIME}${hours}h${mins}m"
     else
-        duration_info="${mins}m"
+        duration_info="${ICON_TIME}${mins}m"
     fi
 fi
 
