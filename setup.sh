@@ -109,6 +109,37 @@ if [[ `uname` == "Darwin" ]]; then
     "$base_dir/macos/copy_default_key_binding.sh"
 fi
 
+install_nerd_font() {
+    if fc-list 2>/dev/null | grep -qi "Nerd Font"; then
+        echo "Nerd Font already installed, skipping."
+        return 0
+    fi
+    local font="JetBrainsMono"
+    local url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${font}.tar.xz"
+    if $is_darwin; then
+        local dest="$HOME/Library/Fonts"
+    else
+        local dest="$HOME/.local/share/fonts"
+    fi
+    mkdir -p "$dest"
+    local tmp
+    tmp=$(mktemp -d)
+    echo "Downloading ${font} Nerd Font..."
+    if curl -fsSL --connect-timeout 10 --max-time 120 "$url" -o "$tmp/${font}.tar.xz"; then
+        tar -xJf "$tmp/${font}.tar.xz" -C "$tmp"
+        find "$tmp" -name "*.ttf" -exec cp {} "$dest/" \;
+        fc-cache -f "$dest" 2>/dev/null
+        rm -f /tmp/.claude-statusline-nerd-font
+        echo "Nerd Font installed to $dest"
+    else
+        echo "Warning: failed to download Nerd Font, statusline will use ASCII fallback."
+    fi
+    rm -rf "$tmp"
+}
+
+echo "Setting up Nerd Font..."
+install_nerd_font
+
 mkdir -p ~/.claude
 for f in "$base_dir"/claude/*; do
     link_file "$f" ~/.claude/"$(basename "$f")"

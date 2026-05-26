@@ -37,45 +37,14 @@ DIM=$'\e[2m'; BOLD=$'\e[1m'; RST=$'\e[0m'
 YELLOW=$'\e[93m'; RED=$'\e[91m'; GREEN=$'\e[92m'; CYAN=$'\e[96m'; MAGENTA=$'\e[95m'
 SEP="${DIM} ┆ ${RST}"
 
-# Nerd Font detection with cache + auto-install
+# Nerd Font detection with cache
 _nf_cache="/tmp/.claude-statusline-nerd-font"
 if [ -n "$CLAUDE_STATUSLINE_NERD_FONT" ]; then
     _nf="$CLAUDE_STATUSLINE_NERD_FONT"
 elif [ -f "$_nf_cache" ]; then
     _nf=$(< "$_nf_cache")
-    # Re-check after background install completed
-    if [ "$_nf" = 0 ] && [ -f /tmp/.claude-statusline-nerd-font-installed ]; then
-        rm -f /tmp/.claude-statusline-nerd-font-installed
-        if fc-list 2>/dev/null | grep -qi "Nerd Font"; then _nf=1; printf 1 > "$_nf_cache"; fi
-    fi
 else
-    if fc-list 2>/dev/null | grep -qi "Nerd Font"; then
-        _nf=1
-    else
-        _nf=0
-        # Auto-install in background (first render uses ASCII, next renders get icons)
-        _install_nerd_font() {
-            local font="JetBrainsMono"
-            local url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${font}.tar.xz"
-            case "$(uname -s)" in
-                Darwin) local dest="$HOME/Library/Fonts" ;;
-                *)      local dest="$HOME/.local/share/fonts" ;;
-            esac
-            mkdir -p "$dest"
-            local tmp=$(mktemp -d)
-            if curl -fsSL --connect-timeout 10 --max-time 120 "$url" -o "$tmp/${font}.tar.xz" 2>/dev/null; then
-                tar -xJf "$tmp/${font}.tar.xz" -C "$tmp" 2>/dev/null
-                find "$tmp" -name "*.ttf" -exec cp {} "$dest/" \;
-                fc-cache -f "$dest" 2>/dev/null
-                touch /tmp/.claude-statusline-nerd-font-installed
-            fi
-            rm -rf "$tmp"
-        }
-        if command -v curl >/dev/null 2>&1; then
-            _install_nerd_font &>/dev/null &
-            disown 2>/dev/null
-        fi
-    fi
+    if fc-list 2>/dev/null | grep -qi "Nerd Font"; then _nf=1; else _nf=0; fi
     printf '%s' "$_nf" > "$_nf_cache" 2>/dev/null
 fi
 
