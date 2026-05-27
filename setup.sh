@@ -114,25 +114,12 @@ install_nerd_font() {
         echo "Nerd Font already installed, skipping."
         return 0
     fi
-    if $is_darwin && command -v brew >/dev/null 2>&1; then
+    if command -v brew >/dev/null 2>&1; then
         brew install --cask font-jetbrains-mono-nerd-font
     else
-        local font="JetBrainsMono"
-        local url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${font}.tar.xz"
-        local dest="$HOME/.local/share/fonts"
-        mkdir -p "$dest"
-        local tmp
-        tmp=$(mktemp -d)
-        echo "Downloading ${font} Nerd Font..."
-        if curl -fsSL --connect-timeout 10 --max-time 300 "$url" -o "$tmp/${font}.tar.xz"; then
-            tar -xJf "$tmp/${font}.tar.xz" -C "$tmp"
-            find "$tmp" -name "*.ttf" -exec cp {} "$dest/" \;
-            fc-cache -f "$dest" 2>/dev/null
-            echo "Nerd Font installed to $dest"
-        else
-            echo "Warning: failed to download Nerd Font, statusline will use ASCII fallback."
-        fi
-        rm -rf "$tmp"
+        echo "Warning: brew not found, cannot install Nerd Font. Statusline will use ASCII fallback."
+        echo "  Install Homebrew: https://brew.sh"
+        return 1
     fi
     rm -f /tmp/.claude-statusline-nerd-font
 }
