@@ -186,7 +186,6 @@ fi
 dir_info=""
 if [ -n "$cwd" ]; then
     if [ -n "$project_dir" ] && [ "$cwd" != "$project_dir" ] && [[ "$cwd" == "$project_dir"* ]]; then
-        # Inside project: show project name + relative subpath
         proj_name="${project_dir##*/}"
         rel="${cwd#"$project_dir"/}"
         dir_info="${DIM}${ICON_DIR}${proj_name}/${RST}${rel}"
@@ -195,9 +194,24 @@ if [ -n "$cwd" ]; then
     fi
 fi
 
+# Git branch
+branch_info=""
+_git_dir="${project_dir:-$cwd}"
+if [ -n "$_git_dir" ]; then
+    _branch=$(git -C "$_git_dir" rev-parse --abbrev-ref HEAD 2>/dev/null)
+    if [ -n "$_branch" ]; then
+        if [ "$_nf" = 1 ]; then
+            branch_info="${MAGENTA} ${_branch}${RST}"
+        else
+            branch_info="${MAGENTA}${_branch}${RST}"
+        fi
+    fi
+fi
+
 # --- Assemble (ordered by importance/frequency) ---
 parts=()
 [ -n "$dir_info" ]      && parts+=("$dir_info")
+[ -n "$branch_info" ]   && parts+=("$branch_info")
 [ -n "$session_info" ]  && parts+=("$session_info")
 [ -n "$wt_info" ]       && parts+=("$wt_info")
 [ -n "$pr_info" ]       && parts+=("$pr_info")
