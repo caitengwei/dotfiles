@@ -52,7 +52,7 @@ if [ "$_nf" = 1 ]; then
     ICON_AGENT="󰮄 "; ICON_MODEL="󰚩 "; ICON_TOKEN="󰍛 "
     ICON_CTX_OK="󰁹"; ICON_CTX_MID="󰁿"; ICON_CTX_LOW="󰂎"
     ICON_LINES="󰏫 "; ICON_COST="󰇁 "; ICON_TIME="󱑍 "
-    ICON_CACHE="󰄀 "; ICON_RATE="󱐌 "; ICON_WT="󰙅 "; ICON_PR="󰊤 "; ICON_DIR="󰉋 "; ICON_BRANCH="󰘬 "; ICON_SESSION="󰭻 "
+    ICON_CACHE="󰑮 "; ICON_RATE="󱐌 "; ICON_WT="󰙅 "; ICON_PR="󰊤 "; ICON_DIR="󰉋 "; ICON_BRANCH="󰘬 "; ICON_SESSION="󰭻 "
 else
     ICON_AGENT="@"; ICON_MODEL=""; ICON_TOKEN=""
     ICON_CTX_OK=""; ICON_CTX_MID=""; ICON_CTX_LOW=""
