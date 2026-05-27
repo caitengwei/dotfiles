@@ -52,12 +52,12 @@ if [ "$_nf" = 1 ]; then
     ICON_AGENT="󰮄 "; ICON_MODEL="󰚩 "; ICON_TOKEN="󰍛 "
     ICON_CTX_OK="󰁹"; ICON_CTX_MID="󰁿"; ICON_CTX_LOW="󰂎"
     ICON_LINES="󰏫 "; ICON_COST="󰇁 "; ICON_TIME="󱑍 "
-    ICON_CACHE="󰄀 "; ICON_RATE="󱐌 "; ICON_WT="󰙅 "; ICON_PR="󰊤 "; ICON_DIR="󰉋 "; ICON_BRANCH="󰘬 "
+    ICON_CACHE="󰄀 "; ICON_RATE="󱐌 "; ICON_WT="󰙅 "; ICON_PR="󰊤 "; ICON_DIR="󰉋 "; ICON_BRANCH="󰘬 "; ICON_SESSION="󰭻 "
 else
     ICON_AGENT="@"; ICON_MODEL=""; ICON_TOKEN=""
     ICON_CTX_OK=""; ICON_CTX_MID=""; ICON_CTX_LOW=""
     ICON_LINES=""; ICON_COST="\$"; ICON_TIME=""
-    ICON_CACHE=""; ICON_RATE="!"; ICON_WT="wt:"; ICON_PR="PR#"; ICON_DIR=""; ICON_BRANCH=""
+    ICON_CACHE=""; ICON_RATE="!"; ICON_WT="wt:"; ICON_PR="PR#"; ICON_DIR=""; ICON_BRANCH=""; ICON_SESSION=""
 fi
 
 # --- Build sections ---
@@ -65,7 +65,7 @@ fi
 # Session/Agent
 session_info=""
 if [ -n "$session_name" ]; then
-    session_info="${DIM}${session_name}${RST}"
+    session_info="${ICON_SESSION}${session_name}"
 elif [ -n "$agent_name" ]; then
     session_info="${ICON_AGENT}${agent_name}"
 fi
