@@ -52,12 +52,12 @@ if [ "$_nf" = 1 ]; then
     ICON_AGENT="󰮄 "; ICON_MODEL="󰚩 "; ICON_TOKEN="󰍛 "
     ICON_CTX_OK="󰁹"; ICON_CTX_MID="󰁿"; ICON_CTX_LOW="󰂎"
     ICON_LINES="󰏫 "; ICON_COST="󰇁 "; ICON_TIME="󱑍 "
-    ICON_CACHE="󰄀 "; ICON_RATE="󱐌 "; ICON_WT="󰘬 "; ICON_PR="󰊤 "; ICON_DIR="󰉋 "
+    ICON_CACHE="󰄀 "; ICON_RATE="󱐌 "; ICON_WT="󰙅 "; ICON_PR="󰊤 "; ICON_DIR="󰉋 "; ICON_BRANCH="󰘬 "
 else
     ICON_AGENT="@"; ICON_MODEL=""; ICON_TOKEN=""
     ICON_CTX_OK=""; ICON_CTX_MID=""; ICON_CTX_LOW=""
     ICON_LINES=""; ICON_COST="\$"; ICON_TIME=""
-    ICON_CACHE=""; ICON_RATE="!"; ICON_WT="wt:"; ICON_PR="PR#"; ICON_DIR=""
+    ICON_CACHE=""; ICON_RATE="!"; ICON_WT="wt:"; ICON_PR="PR#"; ICON_DIR=""; ICON_BRANCH=""
 fi
 
 # --- Build sections ---
@@ -199,13 +199,7 @@ branch_info=""
 _git_dir="${project_dir:-$cwd}"
 if [ -n "$_git_dir" ]; then
     _branch=$(git -C "$_git_dir" rev-parse --abbrev-ref HEAD 2>/dev/null)
-    if [ -n "$_branch" ]; then
-        if [ "$_nf" = 1 ]; then
-            branch_info="${MAGENTA} ${_branch}${RST}"
-        else
-            branch_info="${MAGENTA}${_branch}${RST}"
-        fi
-    fi
+    [ -n "$_branch" ] && branch_info="${MAGENTA}${ICON_BRANCH}${_branch}${RST}"
 fi
 
 # --- Assemble (ordered by importance/frequency) ---
